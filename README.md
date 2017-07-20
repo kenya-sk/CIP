@@ -3,10 +3,10 @@
 <http://alcon.itlab.org/>
 
 ## due
-* entry:      2017/08/04
-* submission: 2017/09/29
-* paper:      2017/10/20
-* party:      2017/12/07
+2017/08/04: entry
+2017/09/29: submission
+2017/10/20: submission(paper)
+2017/12/07: party
 
 ## development policy
 shared repository model
