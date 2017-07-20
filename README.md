@@ -4,8 +4,8 @@
 
 ## due
 2017/08/04: entry<br>
-2017/09/29: submission<br>　　
-2017/10/20: submission(paper)<br>　　
+2017/09/29: submission<br>
+2017/10/20: submission(paper)<br>
 2017/12/07: party<br>
 
 ## development policy
