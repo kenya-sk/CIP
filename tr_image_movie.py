@@ -6,7 +6,8 @@ import numpy as np
 import cv2
 
 def main(videoFilepath, level=1):
-	direc="/data/sakka/pre_image/Pre_Data{0:02d}".format(level)
+	#direc="/data/sakka/pre_image/Pre_Data{0:02d}".format(level)
+	direc="/Users/kenya/pre_image/Pre_Data{0:02d}".format(level)
 
 	inputFilepath=direc+"/input.csv"
 	with open(inputFilepath, 'r') as f:
@@ -23,14 +24,14 @@ def main(videoFilepath, level=1):
 
 	for time in range(1,timeMax+1):
 		for page in range(1,pageMax+1):
-			filepath=direc+"/t{0:03d}/Pre_Data01_t{1:03d}_page_{2:04d}.tif".format(time, time, page)
+			filepath=direc+"/t{0:03d}/Pre_Data{1:02d}_t{2:03d}_page_{3:04d}.tif".format(time, level, time, page)
 			img = cv2.imread(filepath)
 			video.write(img)
-		for k in range(10):
+			print(filepath)
+		for _ in range(10):
 			video.write(waitImg)
 	video.release()	
 
 if __name__=="__main__":
 	args = sys.argv
 	main(str(args[1]), int(args[2]))
-#pull request test	
