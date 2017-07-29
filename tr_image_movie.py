@@ -7,25 +7,10 @@ import cv2
 import argparse
 
 
-def get_lst_by_time(direc, level, timeMax, pageMax):
-	filepath_lst=[]
-	for page in range(1,pageMax+1):
-		for time in range(1,timeMax+1):
-			filepath=direc+"/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
-			filepath_lst.append(filepath)
-		for _ in range(10):
-			filepath_lst.append(None)
-	return filepath_lst
-
-def get_lst_by_page(direc, level, timeMax, pageMax):
-	filepath_lst=[]
-	for time in range(1,timeMax+1):
-		for page in range(1,pageMax+1):
-			filepath=direc+"/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
-			filepath_lst.append(filepath)
-		for _ in range(10):
-			filepath_lst.append(None)
-	return filepath_lst
+def add_frame(img, frame):
+	assert len(frame)==4
+	cv2.rectangle(img, (frame[0], frame[1]), (frame[2], frame[3]), (0, 0, 255), 2)
+	return img
 
 def main(videoFilepath, level=1,axis='time'):
 	
@@ -49,6 +34,29 @@ def main(videoFilepath, level=1,axis='time'):
 		timeMax=int(f.readline().strip())
 		pageMax=int(f.readline().strip())
 
+
+	#--------------------------------------------------------------------------------
+	# load Answer.txt to get time2zrange and time2frame
+	#--------------------------------------------------------------------------------
+	answerFilepath=direc+"/Pre_Data{0:02d}/Pre_Data{0:02d}_Answer.txt".format(level)
+	with open(answerFilepath, 'r') as f:
+		assert timeMax==int(f.readline().strip())
+		numDivision=int(f.readline().strip())
+		#assert numDivision==1
+		time2zrange_lst=[]
+		time2frame_lst=[]
+		for _ in range(numDivision):
+			time2zrange=[None]
+			time2frame=[None]
+			f.readline()
+			for time in range(1, timeMax+1):
+				ax,ay,az,bx,by,bz=[int(i) for i in f.readline().strip().split('\t')]
+				time2zrange.append((az, bz))
+				time2frame.append((ax,ay,bx,by))
+			time2zrange_lst.append(time2zrange)
+			time2frame_lst.append(time2frame)
+
+
 	#--------------------------------------------------------------------------------
 	# video output configuration
 	#--------------------------------------------------------------------------------
@@ -60,27 +68,43 @@ def main(videoFilepath, level=1,axis='time'):
 	#--------------------------------------------------------------------------------
 	# output .mp4 with designated order 
 	#--------------------------------------------------------------------------------
-	if axis=="time":
-		filepath_lst=get_lst_by_time(direc, level, timeMax, pageMax)
-	elif axis=="page":
-		filepath_lst=get_lst_by_page(direc, level, timeMax, pageMax)
+	print("level: {}, axis: {}".format(level, axis))
+	if axis == "time":
+		time_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst)
+	elif axis == "page":
+		page_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst)
 	else:
 		print("Bad Axis Error: {}".format(axis))
 		sys.exit(1)
-
-	print("level: {}, axis: {}".format(level, axis))
-	for i,filepath in enumerate(filepath_lst):
-		if i % 100==0:
-			print('.',end='', flush=True)
-		if filepath is not None:
-			img=cv2.imread(filepath)
-			video.write(img)
-		else:
-			video.write(waitImg)
-	print()
 	print("DONE: {}".format(videoFilepath))
+		
 
-	
+def time_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst):
+	for page in range(1,pageMax+1):
+		for time in range(1,timeMax+1):
+			filepath=direc+"/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
+			img = cv2.imread(filepath)
+			for time2zrange, time2frame in zip(time2zrange_lst, time2frame_lst):
+				if time2zrange[time][0]<=page and page<=time2zrange[time][1]:
+					img = add_frame(img, time2frame[time])
+			video.write(img)
+		for _ in range(10):
+			video.write(waitImg)
+	video.release()
+
+def page_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst):
+	for time in range(1,timeMax+1):
+		for page in range(1,pageMax+1):
+			filepath=direc+"/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
+			img = cv2.imread(filepath)
+			for time2zrange, time2frame in zip(time2zrange_lst, time2frame_lst):
+				if time2zrange[time][0]<=page and page<=time2zrange[time][1]:
+					img = add_frame(img, time2frame[time])
+			video.write(img)
+		for _ in range(10):
+			video.write(waitImg)
+	video.release()
+
 def make_parse():
 	parser = argparse.ArgumentParser(prog='tr_image_movie.py',
 									usage='Transrate image to movie',
