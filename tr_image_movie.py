@@ -7,9 +7,15 @@ import cv2
 import argparse
 
 def main(videoFilepath, level=1,axis='time'):
-	#direc="/data/sakka/pre_image/Pre_Data{0:02d}".format(level)
-	direc="/Users/kenya/pre_image/Pre_Data{0:02d}".format(level)
-
+	try:
+		with open("config.txt", 'r') as f:
+			direc=f.readline().strip()
+	except FileNotFoundError:
+		print("NotFound: config.txt")
+		print("\tPlease specify file directory in ./config.txt")
+		sys.exit(1)
+	
+	direc+="/Pre_Data{0:02d}".format(level)
 	inputFilepath=direc+"/input.csv"
 	with open(inputFilepath, 'r') as f:
 		f.readline()
