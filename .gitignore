@@ -16,6 +16,7 @@
 !*.sh
 !*.ipynb
 !*.md
+!*.ini
 !CMakeLists.txt
 
 .ipynb_checkpoints
