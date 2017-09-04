@@ -77,7 +77,25 @@ def calc_fix_direction():
         """
         calcurate movement according to flow
         """
-        movement = np.array([1, 1, 0])  # WRITE ME
+        height, width = 480, 480  # input image size 
+        step = 8  # sampling step
+        y, x = np.mgrid[step/ 2:height:step,step/ 2:width:step].reshape(2,-1).astype(int)
+        movementX = []
+        movementY = []
+        movementZ = [0, 0]
+        for y,x in zip(y,x):
+            if abs(flow[y, x][0]) >= 10 or abs(flow[y,x][1]) >= 10:
+                movementX.append(int(flow[y,x][0]))
+                movementY.append(int(flow[y,x][1]))
+        try:
+            modeX = st.mode(movementX)
+            modeY = st.mode(movementY)
+            modeZ = st.mode(movementZ)
+        except st.StatisticsError:
+            modeX = 0
+            modeY = 0
+            modeZ = 0
+        movement = np.array([modeX, modeY, modeZ])  # WRITE ME
         return movement
 
     fixDirection_arr = np.zeros((TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
@@ -97,8 +115,9 @@ def output_fix_direction(fixDirection_arr, outputFilepath):
     """
     output fixDirection_arr into text file.
     """
-    pass  # WRITE ME
-
+    with open (outputFilepath,"w") as f:
+        for i,data in enumerate(fixDirection_arr):
+            f.write("time: {0:02d}   fixDirection: {1}\n".format(i, data))
 
 def output_stabilized_video(fixDirection_arr, configFilepath):
     """
@@ -129,20 +148,22 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
             fixDirectionX = int(fixDirection_arr[time][0])
             fixDirectionY = int(fixDirection_arr[time][1])
+            fixDirectionZ = int(fixDirection_arr[time][2])
 
             fixImg[int((fixHeight - height) / 2) - fixDirectionY:
                    int(height + (fixHeight - height) / 2) - fixDirectionY,
                    int((fixWidth - width) / 2) - fixDirectionX:
                    int(width + (fixWidth - width) / 2) - fixDirectionX] = img
 
-            text = '[{0:03d},{1:03d}]'.format(fixDirectionX, fixDirectionY)
-            cv2.putText(fixImg, text, (fixWidth - 200, fixHeight - 25),
+            text = '[{0:03d},{1:03d},{2:03d}]'.format(fixDirectionX, fixDirectionY,fixDirectionZ)
+            cv2.putText(fixImg, text, (fixWidth - 300, fixHeight - 25),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
             video.write(fixImg)
 
         for _ in range(10):
             video.write(waitImg)
     video.release()
+    output_fix_direction(fixDirection_arr, "./fixDirc.txt")
     print("DONE: output video to {}".format(videoFilepath))
 
 
