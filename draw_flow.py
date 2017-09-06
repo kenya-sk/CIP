@@ -52,7 +52,7 @@ def get_image(level, time, page):
     return img
 
 
-def output_draw_flow_video(configFilepath):
+def output_video_with_flow(configFilepath):
     #------------------------------------------
     # pre processing 
     #------------------------------------------
@@ -114,10 +114,10 @@ def main():
     set_config(configFilepath)
     
     if OUTPUT_VIDEO:
-        output_draw_flow_video(configFilepath)
+        output_video_with_flow(configFilepath)
 
 if __name__ == "__main__":
-        start = time.time()
-        main()
-        elapse = time.time() - start
-        print("\nelapse time: {} sec".format(elapse))
+     start = time.time()
+    main()
+    elapse = time.time() - start
+    print("\nelapse time: {} sec".format(elapse))
