@@ -8,56 +8,26 @@ import statistics as st
 import cv2
 import matplotlib.pyplot as plt
 from configparser import ConfigParser
+import ciputil
 
-BASEDIR = None
 LEVEL = None
 TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
 
 
-def set_config(configFilepath):
-    global BASEDIR
-    global LEVEL
-    global TIME_MAX
-    global PAGE_MAX
-    global OUTPUT_VIDEO
-
-    def get_level_configuration(level):
-        '''
-        load input.csv for given level
-        return timeMax and pageMax
-        '''
-
-        inputFilepath = BASEDIR + '/Pre_Data{0:02d}/input.csv'.format(level)
-        try:
-            with open(inputFilepath, 'r') as f:
-                f.readline()
-                timeMax = int(f.readline().strip())
-                pageMax = int(f.readline().strip())
-        except FileNotFoundError:
-            print('Not Found: {}'.format(inputFilepath))
-            sys.exit(1)
-        return timeMax, pageMax
-
-    try:
-        config = ConfigParser()
-        config.read(configFilepath)
-    except FileNotFoundError:
-        print('Not Found: {}'.format(configFilepath))
-        sys.exit(1)
-
-    BASEDIR = config["DEFAULT"]["BASEDIR"]
-    LEVEL = int(config["DEFAULT"]["LEVEL"])
-    TIME_MAX, PAGE_MAX = get_level_configuration(LEVEL)
-    OUTPUT_VIDEO = config.getboolean('DEFAULT', 'OUTPUT_VIDEO')
-
-
-def get_image(level, time, page):
-    filepath = BASEDIR + "/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
-    img = cv2.imread(filepath)
-    assert img.shape == (480, 480, 3)
-    return img
+def draw_flow(img, flow):
+    """
+    draw optical flow on img
+    """
+    x, y = img.shape[:2]
+    fx,fy = flow[y, x].T
+    lines = np.vstack([x, y, x + fx, y + fy]).T.reshape(-1,2,2)
+    lines = np.int32(lines)
+    col = (0, 0, 255)
+    for (x1, y1), (x2, y2) in lines:
+        cv2.line(img, (x1, y1), (x2, y2), col, 1)
+    return img    
 
 
 def calc_fix_direction():
@@ -73,12 +43,13 @@ def calc_fix_direction():
             nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
         return cv2.calcOpticalFlowFarneback(prevImg, nextImg, None, 0.5, 3, 15, 3, 5, 1.2, 0)
 
+
     def calc_movement(flow):
         """
         calcurate movement according to flow
         """
         height, width = 480, 480  # input image size 
-        step = 8  # sampling step
+        step = 16  # sampling step
         y, x = np.mgrid[step/ 2:height:step,step/ 2:width:step].reshape(2,-1).astype(int)
         movementX = []
         movementY = []
@@ -99,9 +70,9 @@ def calc_fix_direction():
         return movement
 
     fixDirection_arr = np.zeros((TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
-    prevImg = get_image(level=LEVEL, time=1, page=1)
+    prevImg = ciputil.get_image(level=LEVEL, time=1, page=1)
     for time in range(2, TIME_MAX + 1):
-        nextImg = get_image(level=LEVEL, time=time, page=1)
+        nextImg = ciputil.get_image(level=LEVEL, time=time, page=1)
         flow = calc_flow(prevImg, nextImg)
         movement = calc_movement(flow)
         for i in range(3):
@@ -141,7 +112,7 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
     for page in range(pageFirst, pageLast + 1):
         for time in range(1, TIME_MAX + 1):
-            img = get_image(level=LEVEL, time=time, page=page)
+            img = ciputil.get_image(level=LEVEL, time=time, page=page)
             fixImg = np.zeros((960, 960, 3), np.uint8)
             height, width = img.shape[:2]
             fixHeight, fixWidth = fixImg.shape[:2]
@@ -168,8 +139,13 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
 
 def main():
+    global LEVEL
+    global TIME_MAX
+    global PAGE_MAX
+    global OUTPUT_VIDEO
+
     configFilepath = "./config/config.ini"
-    set_config(configFilepath)
+    LEVEL, TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
     fixDirection_arr = calc_fix_direction()
     print("DONE:  calcurate fix direction")
 
