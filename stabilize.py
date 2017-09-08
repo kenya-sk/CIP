@@ -16,53 +16,41 @@ PAGE_MAX = None
 OUTPUT_VIDEO = None
 
 
-def draw_flow(img, flow):
-    """
-    draw optical flow on img
-    """
-    x, y = img.shape[:2]
-    fx,fy = flow[y, x].T
-    lines = np.vstack([x, y, x + fx, y + fy]).T.reshape(-1,2,2)
-    lines = np.int32(lines)
-    col = (0, 0, 255)
-    for (x1, y1), (x2, y2) in lines:
-        cv2.line(img, (x1, y1), (x2, y2), col, 1)
-    return img    
-
-
 def calc_fix_direction():
     """
     calculate fix direction for at each time point.
     fixDirection_arr[time] = (fixDirectionX, fixDirectionY, fixDirectionZ)
     """
 
-    def calc_flow(prevImg, nextImg):
+    def calc_flow(prevImg, nextImg, prevFeature, lk_params):
         assert prevImg.shape == nextImg.shape
         if len(prevImg.shape) == 3:
             prevImg = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
-        return cv2.calcOpticalFlowFarneback(prevImg, nextImg, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+            nextFeature, status, err = cv2.calcOpticalFlowPyrLK(prevImg, nextImg, prevFeature, None, **lk_params)
+            prevGood = prevFeature[status == 1]
+            nextGood = nextFeature[status == 1]
+            
+            flow = [[],[],[0,0]]
+            for nextPoint,prevPoint in zip(nextGood, prevGood):
+                prevX, prevY = prevPoint.ravel()
+                nextX, nextY = nextPoint.ravel()
+                flow[0].append(nextX - prevX)
+                flow[1].append(nextY - prevY)
+            prevFeature = nextGood.reshape(-1, 1, 2)
+        return flow, prevFeature
 
 
     def calc_movement(flow, criterion="mode"):
-        """
-        calcurate movement according to flow
-        """
-        height, width = 480, 480  # input image size 
-        step = 16  # sampling step
-        y, x = np.mgrid[step/ 2:height:step,step/ 2:width:step].reshape(2,-1).astype(int)
-        movementX = []
-        movementY = []
-        movementZ = [0, 0]
-        for y,x in zip(y,x):
-            if abs(flow[y, x][0]) >= 10 or abs(flow[y,x][1]) >= 10:
-                movementX.append(int(flow[y,x][0]))
-                movementY.append(int(flow[y,x][1]))
         if criterion == "mode":
+            for i in range(len(flow[0])):
+                flow[0][i]  = int(flow[0][i])
+                flow[1][i]  = int(flow[1][i])
+                #flow[2][i]  = int(flow[2][i])
             try:
-                modeX = st.mode(movementX)
-                modeY = st.mode(movementY)
-                modeZ = st.mode(movementZ)
+                modeX = st.mode(flow[0])
+                modeY = st.mode(flow[1])
+                modeZ = st.mode(flow[2])
             except st.StatisticsError:
                 modeX = 0
                 modeY = 0
@@ -70,9 +58,9 @@ def calc_fix_direction():
             movement = np.array([modeX, modeY, modeZ])
         elif criterion == "median":
             try:
-                medianX = st.median(movementX)
-                medianY = st.median(movementY)
-                medianZ = st.median(movementZ)
+                medianX = st.median(flow[0])
+                medianY = st.median(flow[1])
+                medianZ = st.median(flow[2])
             except st.StatisticsError:
                 medianX = 0
                 medianY = 0
@@ -80,9 +68,9 @@ def calc_fix_direction():
             movement = np.array([medianX, medianY, medianZ])
         elif criterion == "mean":
             try:
-                meanX = sum(movementX)/len(movementX)
-                meanY = sum(movementY)/len(movementY)
-                meanZ = sum(movementZ)/len(movementZ)
+                meanX = sum(flow[0])/len(flow[0])
+                meanY = sum(flow[1])/len(flow[1])
+                meanZ = sum(flow[2])/len(flow[2])
             except ZeroDivisionError:
                 meanX = 0
                 meanY = 0
@@ -90,24 +78,29 @@ def calc_fix_direction():
             movement = np.array([meanX, meanY, meanZ])
         return movement
 
-    def calc_mean_movement(flow):
-        """
-        calcurate mean movement according to flow
-        """
-        height, width = 480, 480
-        step = 16
-        y, x = np.mgrid[step/ 2:height:step, step/ 2:width:step].reshape(2,-1).astype(int)
-        
-        return movement
+    #-------------------------------------------------
+    #sparse optical flow parameter
+    #-------------------------------------------------
+    #corner detection parameter of Shi-Tomasi
+    feature_params = dict(maxCorners = 200,
+                            qualityLevel = 0.001,
+                            minDistance = 10,
+                            blockSize = 5)
+    #parameter of Lucas-Kanade method
+    lk_params = dict(winSize = (20, 20),
+                        maxLevel = 5,
+                        criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
     fixDirection_arr = np.zeros((TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     prevImg = ciputil.get_image(level=LEVEL, time=1, page=1)
+    prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
+    prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
     for time in range(2, TIME_MAX + 1):
         nextImg = ciputil.get_image(level=LEVEL, time=time, page=1)
-        flow = calc_flow(prevImg, nextImg)
-        movement = calc_movement(flow, "median")
+        flow, prevFeature = calc_flow(prevImg, nextImg, prevFeature, lk_params)
+        movement = calc_movement(flow, "mode")
         for i in range(3):
-            fixDirection_arr[time][i] = fixDirection_arr[time - 1][i] + movement[i]
+            fixDirection_arr[time -1][i] = fixDirection_arr[time - 2][i] + movement[i]
         prevImg = nextImg
 
     return fixDirection_arr
