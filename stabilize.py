@@ -44,7 +44,7 @@ def calc_fix_direction():
         return cv2.calcOpticalFlowFarneback(prevImg, nextImg, None, 0.5, 3, 15, 3, 5, 1.2, 0)
 
 
-    def calc_movement(flow):
+    def calc_movement(flow, criterion="mode"):
         """
         calcurate movement according to flow
         """
@@ -58,15 +58,46 @@ def calc_fix_direction():
             if abs(flow[y, x][0]) >= 10 or abs(flow[y,x][1]) >= 10:
                 movementX.append(int(flow[y,x][0]))
                 movementY.append(int(flow[y,x][1]))
-        try:
-            modeX = st.mode(movementX)
-            modeY = st.mode(movementY)
-            modeZ = st.mode(movementZ)
-        except st.StatisticsError:
-            modeX = 0
-            modeY = 0
-            modeZ = 0
-        movement = np.array([modeX, modeY, modeZ])  # WRITE ME
+        if criterion == "mode":
+            try:
+                modeX = st.mode(movementX)
+                modeY = st.mode(movementY)
+                modeZ = st.mode(movementZ)
+            except st.StatisticsError:
+                modeX = 0
+                modeY = 0
+                modeZ = 0
+            movement = np.array([modeX, modeY, modeZ])
+        elif criterion == "median":
+            try:
+                medianX = st.median(movementX)
+                medianY = st.median(movementY)
+                medianZ = st.median(movementZ)
+            except st.StatisticsError:
+                medianX = 0
+                medianY = 0
+                medianZ = 0
+            movement = np.array([medianX, medianY, medianZ])
+        elif criterion == "mean":
+            try:
+                meanX = sum(movementX)/len(movementX)
+                meanY = sum(movementY)/len(movementY)
+                meanZ = sum(movementZ)/len(movementZ)
+            except ZeroDivisionError:
+                meanX = 0
+                meanY = 0
+                meanZ = 0
+            movement = np.array([meanX, meanY, meanZ])
+        return movement
+
+    def calc_mean_movement(flow):
+        """
+        calcurate mean movement according to flow
+        """
+        height, width = 480, 480
+        step = 16
+        y, x = np.mgrid[step/ 2:height:step, step/ 2:width:step].reshape(2,-1).astype(int)
+        
         return movement
 
     fixDirection_arr = np.zeros((TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
@@ -74,7 +105,7 @@ def calc_fix_direction():
     for time in range(2, TIME_MAX + 1):
         nextImg = ciputil.get_image(level=LEVEL, time=time, page=1)
         flow = calc_flow(prevImg, nextImg)
-        movement = calc_movement(flow)
+        movement = calc_movement(flow, "median")
         for i in range(3):
             fixDirection_arr[time][i] = fixDirection_arr[time - 1][i] + movement[i]
         prevImg = nextImg
