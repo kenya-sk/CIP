@@ -12,7 +12,7 @@ def read_config(configFilepath):
     global BASEDIR
     global LEVEL
 
-    def get_level_configuration(level):
+    def get_level_configuration():
         inputFilepath = BASEDIR + "/Pre_Data{0:02d}/input.csv".format(LEVEL)
         try:
             with open(inputFilepath,"r") as f:
@@ -34,7 +34,7 @@ def read_config(configFilepath):
     BASEDIR = config["DEFAULT"]["BASEDIR"]
     LEVEL = int(config["DEFAULT"]["LEVEL"])
     output_video = config.getboolean("DEFAULT", "OUTPUT_VIDEO")
-    timemax, pagemax = get_level_configuration(LEVEL)
+    timemax, pagemax = get_level_configuration()
 
     return timemax, pagemax, output_video
 
