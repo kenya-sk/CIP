@@ -10,74 +10,69 @@ import matplotlib.pyplot as plt
 from configparser import ConfigParser
 import ciputil
 
-LEVEL = None
 TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
 
 
-def draw_flow(img, flow):
-    """
-    draw optical flow on img
-    """
-    x, y = img.shape[:2]
-    fx,fy = flow[y, x].T
-    lines = np.vstack([x, y, x + fx, y + fy]).T.reshape(-1,2,2)
-    lines = np.int32(lines)
-    col = (0, 0, 255)
-    for (x1, y1), (x2, y2) in lines:
-        cv2.line(img, (x1, y1), (x2, y2), col, 1)
-    return img    
-
-
 def calc_fix_direction():
     """
     calculate fix direction for at each time point.
-    fixDirection_arr[time] = (fixDirectionX, fixDirectionY, fixDirectionZ)
+    fixDirection_arr[page][time][xyz] = [1-PAGE_MAX][1-TIME_MAX+1](fixDirectionX, fixDirectionY, fixDirectionZ)
     """
-
-    def calc_flow(prevImg, nextImg):
+    def get_feature(prevImg, nextImg, prevFeature):
         assert prevImg.shape == nextImg.shape
+        #parameter of Lucas-Kanade method
+        lk_params = dict(winSize = (20, 20),
+                            maxLevel = 5,
+                            criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
         if len(prevImg.shape) == 3:
             prevImg = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
-        return cv2.calcOpticalFlowFarneback(prevImg, nextImg, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+            nextFeature, status, err = cv2.calcOpticalFlowPyrLK(prevImg, nextImg, prevFeature, None, **lk_params)
+            prevGood = prevFeature[status == 1]
+            nextGood = nextFeature[status == 1]
+        return prevGood, nextGood
 
+    def calc_flow(prevGood, nextGood):
+        flow = np.zeros((3,nextGood.shape[0]))
+        for i, (nextPoint, prevPoint) in enumerate(zip(nextGood, prevGood)):
+            prevX, prevY = prevPoint.ravel()
+            nextX, nextY = nextPoint.ravel()
+            flow[0][i] = nextX - prevX
+            flow[1][i] = nextY - prevY
+        return flow
 
     def calc_movement(flow):
-        """
-        calcurate movement according to flow
-        """
-        height, width = 480, 480  # input image size 
-        step = 16  # sampling step
-        y, x = np.mgrid[step/ 2:height:step,step/ 2:width:step].reshape(2,-1).astype(int)
-        movementX = []
-        movementY = []
-        movementZ = [0, 0]
-        for y,x in zip(y,x):
-            if abs(flow[y, x][0]) >= 10 or abs(flow[y,x][1]) >= 10:
-                movementX.append(int(flow[y,x][0]))
-                movementY.append(int(flow[y,x][1]))
         try:
-            modeX = st.mode(movementX)
-            modeY = st.mode(movementY)
-            modeZ = st.mode(movementZ)
-        except st.StatisticsError:
-            modeX = 0
-            modeY = 0
-            modeZ = 0
-        movement = np.array([modeX, modeY, modeZ])  # WRITE ME
+            meanX, meanY, meanZ = np.mean(flow,axis=1)
+        except ZeroDivisionError:
+            meanX, meanY, meanZ = 0, 0, 0
+        movement = np.array([meanX, meanY, meanZ])
         return movement
 
-    fixDirection_arr = np.zeros((TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
-    prevImg = ciputil.get_image(level=LEVEL, time=1, page=1)
-    for time in range(2, TIME_MAX + 1):
-        nextImg = ciputil.get_image(level=LEVEL, time=time, page=1)
-        flow = calc_flow(prevImg, nextImg)
-        movement = calc_movement(flow)
-        for i in range(3):
-            fixDirection_arr[time][i] = fixDirection_arr[time - 1][i] + movement[i]
-        prevImg = nextImg
+
+    fixDirection_arr = np.zeros((PAGE_MAX,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
+    allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
+
+    feature_params = dict(maxCorners = 200,
+                            qualityLevel = 0.001,
+                            minDistance = 10,
+                            blockSize = 5)
+
+    for page in range(1, PAGE_MAX + 1):
+        prevImg = ciputil.get_image(time=1, page=page)
+        prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
+        prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
+        for time in range(2, TIME_MAX + 1):
+            nextImg = ciputil.get_image(time=time, page=page)
+            prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
+            flow = calc_flow(prevGood, nextGood)
+            movement = calc_movement(flow)
+            prevFeature = nextGood.reshape(-1, 1, 2)
+            for i in range(3):
+                fixDirection_arr[page-1][time][i] = fixDirection_arr[page-1][time - 1][i] + movement[i]
+            prevImg = nextImg
 
     return fixDirection_arr
 
@@ -112,14 +107,14 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
     for page in range(pageFirst, pageLast + 1):
         for time in range(1, TIME_MAX + 1):
-            img = ciputil.get_image(level=LEVEL, time=time, page=page)
+            img = ciputil.get_image(time=time, page=page)
             fixImg = np.zeros((960, 960, 3), np.uint8)
             height, width = img.shape[:2]
             fixHeight, fixWidth = fixImg.shape[:2]
 
-            fixDirectionX = int(fixDirection_arr[time][0])
-            fixDirectionY = int(fixDirection_arr[time][1])
-            fixDirectionZ = int(fixDirection_arr[time][2])
+            fixDirectionX = int(fixDirection_arr[page-1][time][0])
+            fixDirectionY = int(fixDirection_arr[page-1][time][1])
+            fixDirectionZ = int(fixDirection_arr[page-1][time][2])
 
             fixImg[int((fixHeight - height) / 2) - fixDirectionY:
                    int(height + (fixHeight - height) / 2) - fixDirectionY,
@@ -139,13 +134,12 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
 
 def main():
-    global LEVEL
     global TIME_MAX
     global PAGE_MAX
     global OUTPUT_VIDEO
 
     configFilepath = "./config/config.ini"
-    LEVEL, TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
+    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
     fixDirection_arr = calc_fix_direction()
     print("DONE:  calcurate fix direction")
 
