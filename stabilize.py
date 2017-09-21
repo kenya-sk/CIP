@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from configparser import ConfigParser
 import ciputil
 
-LEVEL = None
 TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
@@ -19,7 +18,7 @@ OUTPUT_VIDEO = None
 def calc_fix_direction():
     """
     calculate fix direction for at each time point.
-    fixDirection_arr[time] = (fixDirectionX, fixDirectionY, fixDirectionZ)
+    fixDirection_arr[page][time][xyz] = [1-PAGE_MAX][1-TIME_MAX+1](fixDirectionX, fixDirectionY, fixDirectionZ)
     """
     def get_feature(prevImg, nextImg, prevFeature):
         assert prevImg.shape == nextImg.shape
@@ -39,68 +38,44 @@ def calc_fix_direction():
         flow = np.zeros((3,nextGood.shape[0]))
         for i, (nextPoint, prevPoint) in enumerate(zip(nextGood, prevGood)):
             prevX, prevY = prevPoint.ravel()
-            nextX, nextY = nextPoint.ravel() 
+            nextX, nextY = nextPoint.ravel()
             flow[0][i] = nextX - prevX
             flow[1][i] = nextY - prevY
         return flow
 
-    def calc_movement(flow, criterion="mode"):
-        if criterion == "mode":
-            for i in range(len(flow[0])):
-                flow[0][i]  = int(flow[0][i])
-                flow[1][i]  = int(flow[1][i])
-                #flow[2][i]  = int(flow[2][i])
-            try:
-                modeX = st.mode(flow[0])
-                modeY = st.mode(flow[1])
-                modeZ = st.mode(flow[2])
-            except st.StatisticsError:
-                modeX, modeY, modeZ = 0, 0, 0
-            movement = np.array([modeX, modeY, modeZ])
-        elif criterion == "median":
-            try:
-                medianX = st.median(flow[0])
-                medianY = st.median(flow[1])
-                medianZ = st.median(flow[2])
-            except st.StatisticsError:
-                medianX, medianY, medianZ = 0, 0, 0
-            movement = np.array([medianX, medianY, medianZ])
-        elif criterion == "mean":
-            try:
-                meanX, meanY, meanZ = np.mean(flow,axis=1)
-            except ZeroDivisionError:
-                meanX, meanY, meanZ = 0, 0, 0
-            movement = np.array([meanX, meanY, meanZ])
-        else:
-            print("Error: criterion")
-            sys.exit(1)
+    def calc_movement(flow):
+        try:
+            meanX, meanY, meanZ = np.mean(flow,axis=1)
+        except ZeroDivisionError:
+            meanX, meanY, meanZ = 0, 0, 0
+        movement = np.array([meanX, meanY, meanZ])
         return movement
 
 
     fixDirection_arr = np.zeros((PAGE_MAX,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
-    
+
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
                             minDistance = 10,
                             blockSize = 5)
-    
+
     for page in range(1, PAGE_MAX + 1):
-        prevImg = ciputil.get_image(level=LEVEL, time=1, page=page)
+        prevImg = ciputil.get_image(time=1, page=page)
         prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
         prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
         for time in range(2, TIME_MAX + 1):
-            nextImg = ciputil.get_image(level=LEVEL, time=time, page=page)
+            nextImg = ciputil.get_image(time=time, page=page)
             prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
             flow = calc_flow(prevGood, nextGood)
-            movement = calc_movement(flow, "mean")
+            movement = calc_movement(flow)
             prevFeature = nextGood.reshape(-1, 1, 2)
             for i in range(3):
                 fixDirection_arr[page-1][time][i] = fixDirection_arr[page-1][time - 1][i] + movement[i]
             prevImg = nextImg
 
     return fixDirection_arr
-            
+
 
 def output_fix_direction(fixDirection_arr, outputFilepath):
     """
@@ -132,7 +107,7 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
     for page in range(pageFirst, pageLast + 1):
         for time in range(1, TIME_MAX + 1):
-            img = ciputil.get_image(level=LEVEL, time=time, page=page)
+            img = ciputil.get_image(time=time, page=page)
             fixImg = np.zeros((960, 960, 3), np.uint8)
             height, width = img.shape[:2]
             fixHeight, fixWidth = fixImg.shape[:2]
@@ -159,13 +134,12 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
 
 def main():
-    global LEVEL
     global TIME_MAX
     global PAGE_MAX
     global OUTPUT_VIDEO
 
     configFilepath = "./config/config.ini"
-    LEVEL, TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
+    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
     fixDirection_arr = calc_fix_direction()
     print("DONE:  calcurate fix direction")
 
