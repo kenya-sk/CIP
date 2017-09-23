@@ -3,7 +3,6 @@
 
 import sys
 import cv2
-import numpy as np
 from configparser import ConfigParser
 
 BASEDIR = None
@@ -41,7 +40,7 @@ def read_config(configFilepath):
 
 
 def get_image(time, page):
-    filepath = BASEDIR + "/Pre_data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(LEVEL, time, page)
+    filepath = BASEDIR + "/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(LEVEL, time, page)
     img = cv2.imread(filepath)
     assert img.shape == (480, 480, 3)
     return img
