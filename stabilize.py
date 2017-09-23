@@ -21,7 +21,7 @@ class Feature(Exception):
 def calc_fix_direction():
     """
     calculate fix direction for at each time point.
-    fixDirection_arr[page][time][xyz] = [1-PAGE_MAX][1-TIME_MAX+1](fixDirectionX, fixDirectionY, fixDirectionZ)
+    fixDirection_arr[page][time][xyz] = [1-PAGE_MAX+1][1-TIME_MAX+1](fixDirectionX, fixDirectionY, fixDirectionZ)
     """
     def get_feature(prevImg, nextImg, prevFeature):
         assert prevImg.shape == nextImg.shape
@@ -54,10 +54,15 @@ def calc_fix_direction():
         movement = np.array([meanX, meanY, meanZ])
         return movement
 
+    def calc_flowAngleVar(flow):
+        angle_arr = np.arctan2(flow[0], flow[1]) * 180 / np.pi
+        angleVar = np.var(angle_arr)
+        return angleVar
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
     latestMovement = np.array([0, 0, 0])
+    angleThresh = 6000
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
@@ -81,6 +86,11 @@ def calc_fix_direction():
                 prevFeature = nextGood.reshape(-1, 1, 2)
                 movement = calc_movement(flow)
                 latestMovement = movement
+                angleVar = calc_flowAngleVar(flow)
+                if angleVar >= angleThresh:
+                    movement = fixDirection_arr[page - 1][time]
+                else:
+                    pass
             except FeatureError:
                 prevFeature = None
                 movement = latestMovement
