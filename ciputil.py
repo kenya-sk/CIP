@@ -51,3 +51,21 @@ def calc_dense_flow(prevImg, nextImg):
     if len(nextImg.shape) == 3:
         nextImg =  cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
     return cv2.calcOpticalFlowFarneback(prevImg, nextImg, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+def get_stabilized_image(img, fixDirection):
+    assert img.shape == (480, 480, 3)
+    assert len(fixDirection) == 3 # x,y,z
+
+    fixImg = np.zeros((960, 960, 3), np.uint8)
+    height, width = img.shape[:2]
+    fixHeight, fixWidth = fixImg.shape[:2]
+
+    fixDirectionX = int(fixDirection[0])
+    fixDirectionY = int(fixDirection[1])
+    fixDirectionZ = int(fixDirection[2])
+
+    fixImg[int((fixHeight - height) / 2) - fixDirectionY:
+           int(height + (fixHeight - height) / 2) - fixDirectionY,
+           int((fixWidth - width) / 2) - fixDirectionX:
+           int(width + (fixWidth - width) / 2) - fixDirectionX] = img
+    return fixImg
