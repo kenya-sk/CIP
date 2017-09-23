@@ -90,15 +90,6 @@ def calc_fix_direction():
 
     return fixDirection_arr
 
-
-def output_fix_direction(fixDirection_arr, outputFilepath):
-    """
-    output fixDirection_arr into text file.
-    """
-    with open (outputFilepath,"w") as f:
-        for i,data in enumerate(fixDirection_arr):
-            f.write("time: {0:02d}   fixDirection: {1}\n".format(i, data))
-
 def output_stabilized_video(fixDirection_arr, configFilepath):
     """
     output stabilized video according to fixDirection_arr
@@ -139,13 +130,11 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
             cv2.putText(fixImg, text, (fixWidth - 300, fixHeight - 25),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
             video.write(fixImg)
-
         for _ in range(10):
             video.write(waitImg)
     video.release()
-    output_fix_direction(fixDirection_arr, "./fixDirc.txt")
-    print("DONE: output video to {}".format(videoFilepath))
 
+    print("DONE: output video to {}".format(videoFilepath))
 
 def main():
     global TIME_MAX
@@ -155,6 +144,7 @@ def main():
     configFilepath = "./config/config.ini"
     TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
     fixDirection_arr = calc_fix_direction()
+    np.save("./fixDir.npy", fixDirection_arr)
     print("DONE:  calcurate fix direction")
 
     if OUTPUT_VIDEO:
