@@ -14,6 +14,9 @@ TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
 
+class Feature(Exception):
+    def __init__(self, value):
+        self.value = value
 
 def calc_fix_direction():
     """
@@ -54,6 +57,7 @@ def calc_fix_direction():
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
+    latestMovement = np.array([0, 0, 0])
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
@@ -63,13 +67,23 @@ def calc_fix_direction():
     for page in range(1, PAGE_MAX + 1):
         prevImg = ciputil.get_image(time=1, page=page)
         prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
-        prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
+        prevFeature = None
         for time in range(2, TIME_MAX + 1):
+            if prevFeature is None:
+                prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
+                prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
             nextImg = ciputil.get_image(time=time, page=page)
-            prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
-            flow = calc_flow(prevGood, nextGood)
-            movement = calc_movement(flow)
-            prevFeature = nextGood.reshape(-1, 1, 2)
+            try:
+                prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
+                if prevGood.shape[0] == 0:
+                    raise FeatureError("Not detect feature")
+                flow = calc_flow(prevGood, nextGood)
+                prevFeature = nextGood.reshape(-1, 1, 2)
+                movement = calc_movement(flow)
+                latestMovement = movement
+            except FeatureError:
+                prevFeature = None
+                movement = latestMovement
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
             prevImg = nextImg
