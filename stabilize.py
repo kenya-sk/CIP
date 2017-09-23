@@ -52,7 +52,7 @@ def calc_fix_direction():
         return movement
 
 
-    fixDirection_arr = np.zeros((PAGE_MAX,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
+    fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
 
     feature_params = dict(maxCorners = 200,
@@ -71,7 +71,7 @@ def calc_fix_direction():
             movement = calc_movement(flow)
             prevFeature = nextGood.reshape(-1, 1, 2)
             for i in range(3):
-                fixDirection_arr[page-1][time][i] = fixDirection_arr[page-1][time - 1][i] + movement[i]
+                fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
             prevImg = nextImg
 
     return fixDirection_arr
@@ -112,9 +112,9 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
             height, width = img.shape[:2]
             fixHeight, fixWidth = fixImg.shape[:2]
 
-            fixDirectionX = int(fixDirection_arr[page-1][time][0])
-            fixDirectionY = int(fixDirection_arr[page-1][time][1])
-            fixDirectionZ = int(fixDirection_arr[page-1][time][2])
+            fixDirectionX = int(fixDirection_arr[page][time][0])
+            fixDirectionY = int(fixDirection_arr[page][time][1])
+            fixDirectionZ = int(fixDirection_arr[page][time][2])
 
             fixImg[int((fixHeight - height) / 2) - fixDirectionY:
                    int(height + (fixHeight - height) / 2) - fixDirectionY,
