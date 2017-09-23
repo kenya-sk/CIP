@@ -57,7 +57,7 @@ def calc_fix_direction():
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
-    letestMovement = np.array([0, 0, 0])
+    latestMovement = np.array([0, 0, 0])
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
@@ -78,9 +78,9 @@ def calc_fix_direction():
                 if prevGood.shape[0] == 0:
                     raise FeatureError("Not detect feature")
                 flow = calc_flow(prevGood, nextGood)
+                prevFeature = nextGood.reshape(-1, 1, 2)
                 movement = calc_movement(flow)
                 latestMovement = movement
-                prevFeature = nextGood.reshape(-1, 1, 2)
             except FeatureError:
                 prevFeature = None
                 movement = latestMovement
