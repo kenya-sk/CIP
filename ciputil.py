@@ -3,6 +3,7 @@
 
 import sys
 import cv2
+import numpy as np
 from configparser import ConfigParser
 
 BASEDIR = None
