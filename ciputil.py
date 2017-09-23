@@ -70,3 +70,14 @@ def get_stabilized_image(img, fixDirection):
            int((fixWidth - width) / 2) - fixDirectionX:
            int(width + (fixWidth - width) / 2) - fixDirectionX] = img
     return fixImg
+
+def draw_dense_flow(img, flow, step=8):
+    h, w = img.shape[:2]
+    y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1).astype(int)
+    fx, fy = flow[y, x].T
+    lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
+    lines = np.int32(lines)
+
+    for (x1, y1), (x2, y2) in lines:
+        cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 1)
+    return img
