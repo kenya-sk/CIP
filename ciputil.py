@@ -44,3 +44,10 @@ def get_image(time, page):
     img = cv2.imread(filepath)
     assert img.shape == (480, 480, 3)
     return img
+
+def calc_dense_flow(prevImg, nextImg):
+    if len(prevImg.shape) == 3:
+        prevImg = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
+    if len(nextImg.shape) == 3:
+        nextImg =  cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
+    return cv2.calcOpticalFlowFarneback(prevImg, nextImg, None, 0.5, 3, 15, 3, 5, 1.2, 0)
