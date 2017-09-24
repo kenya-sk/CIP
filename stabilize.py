@@ -14,7 +14,7 @@ TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
 
-class Feature(Exception):
+class FeatureError(Exception):
     def __init__(self, value):
         self.value = value
 
@@ -37,18 +37,18 @@ def calc_fix_direction():
             nextFeatureFiltered = nextFeature[status == 1]
         return prevFeatureFiltered, nextFeatureFiltered
 
-    def calc_flow(prevFeatureFiltered, nextFeatureFiltered):
-        flow = np.zeros((3,nextFeatureFiltered.shape[0]))
+    def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
+        sparseFlow = np.zeros((nextFeatureFiltered.shape[0],3))
         for i, (nextPoint, prevPoint) in enumerate(zip(nextFeatureFiltered, prevFeatureFiltered)):
             prevX, prevY = prevPoint.ravel()
             nextX, nextY = nextPoint.ravel()
-            flow[0][i] = nextX - prevX
-            flow[1][i] = nextY - prevY
-        return flow
+            sparseFlow[i][0] = nextX - prevX
+            sparseFlow[i][1] = nextY - prevY
+        return sparseFlow
 
-    def calc_movement(flow):
+    def calc_movement(sparseFlow):
         try:
-            meanX, meanY, meanZ = np.mean(flow,axis=1)
+            meanX, meanY, meanZ = np.mean(sparseFlow,axis=0)
         except ZeroDivisionError:
             meanX, meanY, meanZ = 0, 0, 0
         movement = np.array([meanX, meanY, meanZ])
@@ -77,9 +77,9 @@ def calc_fix_direction():
                 prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
                 if prevFeatureFiltered.shape[0] == 0:
                     raise FeatureError("Not detect feature")
-                flow = calc_flow(prevFeatureFiltered, nextFeatureFiltered)
+                sparseFlow = calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered)
                 prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
-                movement = calc_movement(flow)
+                movement = calc_movement(sparseFlow)
                 latestMovement = movement
             except FeatureError:
                 prevFeature = None
