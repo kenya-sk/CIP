@@ -104,7 +104,6 @@ def read_config_fixDirection(configFilepath):
     except FileNotFoundError:
         print("Not Found: {}".format(configFilepath))
         sys.exit(1)
-    writeFixDirecPath = config["FIXDIRECTION"]["WRITE_FILEPATH"]
-    readFixDirecPath = config["FIXDIRECTION"]["READ_FILEPATH"]
+    dumpFilepath = config["FIXDIRECTION"]["DUMP_FILEPATH"]
 
-    return writeFixDirecPath, readFixDirecPath
+    return dumpFilepath
