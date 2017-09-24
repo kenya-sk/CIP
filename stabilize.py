@@ -72,7 +72,8 @@ def calc_fix_direction():
                             blockSize = 5)
 
     for time in range(2, TIME_MAX+1):
-        for page in range(1, PAGE_MAX + 1):
+        #for page in range(1, PAGE_MAX + 1):
+        for page in range(PAGE_MAX, 0, -1):
             prevImg = ciputil.get_image(time=time-1, page=page)
             prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
