@@ -81,3 +81,18 @@ def draw_dense_flow(img, flow, step=8):
     for (x1, y1), (x2, y2) in lines:
         cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 1)
     return img
+
+def read_config_cumulative(configFilepath):
+    try:
+        config = ConfigParser()
+        config.read(configFilepath)
+    except FileNotFoundError:
+        print("Not Found: {}".format(configFilepath))
+        sys.exit(1)
+
+    page = int(config["CUMULATIVE"]["PAGE"])
+    windowSize = int(config["CUMULATIVE"]["WINDOW_SIZE"])
+    dumpFilepath = config["CUMULATIVE"]["DUMP_FILEPATH"]
+    videoFilepath = config["CUMULATIVE"]["VIDEO_FILEPATH"]
+
+    return  page, windowSize, dumpFilepath, videoFilepath
