@@ -14,7 +14,7 @@ TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
 
-class Feature(Exception):
+class FeatureError(Exception):
     def __init__(self, value):
         self.value = value
 
@@ -38,30 +38,29 @@ def calc_fix_direction():
         return prevGood, nextGood
 
     def calc_flow(prevGood, nextGood):
-        flow = np.zeros((3,nextGood.shape[0]))
+        featureFlow = np.zeros((3,nextGood.shape[0]))
         for i, (nextPoint, prevPoint) in enumerate(zip(nextGood, prevGood)):
             prevX, prevY = prevPoint.ravel()
             nextX, nextY = nextPoint.ravel()
-            flow[0][i] = nextX - prevX
-            flow[1][i] = nextY - prevY
-        return flow
+            featureFlow[0][i] = nextX - prevX
+            featureFlow[1][i] = nextY - prevY
+        return featureFlow
 
-    def calc_movement(flow):
+    def calc_movement(featureFlow):
         try:
-            meanX, meanY, meanZ = np.mean(flow,axis=1)
+            meanX, meanY, meanZ = np.mean(featureFlow,axis=1)
         except ZeroDivisionError:
             meanX, meanY, meanZ = 0, 0, 0
         movement = np.array([meanX, meanY, meanZ])
         return movement
 
-    def calc_flowAngleVar(flow):
-        angle_arr = np.arctan2(flow[0], flow[1]) * 180 / np.pi
+    def calc_angle_variance(featureFlow):
+        angle_arr = np.arctan2(featureFlow[0], featureFlow[1]) * 180 / np.pi
         angleVar = np.var(angle_arr)
         return angleVar
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
-    latestMovement = np.array([0, 0, 0])
     angleThresh = 6000
 
     feature_params = dict(maxCorners = 200,
@@ -80,20 +79,17 @@ def calc_fix_direction():
             nextImg = ciputil.get_image(time=time, page=page)
             try:
                 prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
-                if prevGood.shape[0] == 0:
+                if prevGood.shape[0] <= 100:
                     raise FeatureError("Not detect feature")
-                flow = calc_flow(prevGood, nextGood)
+                featureFlow = calc_flow(prevGood, nextGood)
                 prevFeature = nextGood.reshape(-1, 1, 2)
-                movement = calc_movement(flow)
-                latestMovement = movement
-                angleVar = calc_flowAngleVar(flow)
+                movement = calc_movement(featureFlow)
+                angleVar = calc_angle_variance(featureFlow)
                 if angleVar >= angleThresh:
-                    movement = fixDirection_arr[page - 1][time]
-                else:
-                    pass
+                    raise FeatureError("Not detect feature")
             except FeatureError:
                 prevFeature = None
-                movement = latestMovement
+                movement = fixDirection_arr[page - 1][time] - fixDirection_arr[page - 1][time - 1]
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
             prevImg = nextImg
@@ -138,6 +134,9 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
 
             text = '[{0:03d},{1:03d},{2:03d}]'.format(fixDirectionX, fixDirectionY,fixDirectionZ)
             cv2.putText(fixImg, text, (fixWidth - 300, fixHeight - 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
+            data = "[page: {0:03d} time: {1:03d}]".format(page, time)
+            cv2.putText(fixImg, data, (fixWidth - 800, fixHeight - 25),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
             video.write(fixImg)
         for _ in range(10):
