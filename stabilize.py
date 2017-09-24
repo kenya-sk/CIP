@@ -33,68 +33,69 @@ def calc_fix_direction():
             prevImg = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
             nextFeature, status, err = cv2.calcOpticalFlowPyrLK(prevImg, nextImg, prevFeature, None, **lk_params)
-            prevGood = prevFeature[status == 1]
-            nextGood = nextFeature[status == 1]
-        return prevGood, nextGood
+            prevFeatureFiltered = prevFeature[status == 1]
+            nextFeatureFiltered = nextFeature[status == 1]
+        return prevFeatureFiltered, nextFeatureFiltered
 
-    def calc_flow(prevGood, nextGood):
-        featureFlow = np.zeros((3,nextGood.shape[0]))
-        for i, (nextPoint, prevPoint) in enumerate(zip(nextGood, prevGood)):
+    def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
+        sparseFlow = np.zeros((nextFeatureFiltered.shape[0],3))
+        for i, (prevPoint, nextPoint) in enumerate(zip(prevFeatureFiltered, nextFeatureFiltered)):
             prevX, prevY = prevPoint.ravel()
             nextX, nextY = nextPoint.ravel()
-            featureFlow[0][i] = nextX - prevX
-            featureFlow[1][i] = nextY - prevY
-        return featureFlow
+            sparseFlow[i][0] = nextX - prevX
+            sparseFlow[i][1] = nextY - prevY
+        return sparseFlow
 
-    def calc_movement(featureFlow):
+    def calc_movement(sparseFlow):
         try:
-            meanX, meanY, meanZ = np.mean(featureFlow,axis=1)
+            meanX, meanY, meanZ = np.mean(sparseFlow, axis=0)
         except ZeroDivisionError:
             meanX, meanY, meanZ = 0, 0, 0
         movement = np.array([meanX, meanY, meanZ])
         return movement
 
-    def calc_angle_variance(featureFlow):
-        angle_arr = np.arctan2(featureFlow[0], featureFlow[1]) * 180 / np.pi
+    def calc_angle_variance(sparseFlow):
+        angle_arr = np.arctan2(sparseFlow[:, 0], sparseFlow[:, 1]) * 180 / np.pi
         angleVar = np.var(angle_arr)
         return angleVar
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
     angleThresh = 6000
+    latestMovement = np.array([0, 0, 0])
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
                             minDistance = 10,
                             blockSize = 5)
 
-    for page in range(1, PAGE_MAX + 1):
-        prevImg = ciputil.get_image(time=1, page=page)
-        prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
+    for time in range(2, TIME_MAX+1):
         prevFeature = None
-        for time in range(2, TIME_MAX + 1):
-            if prevFeature is None:
-                prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
-                prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
+        for page in range(1, PAGE_MAX + 1):
+            prevImg = ciputil.get_image(time=time-1, page=page)
+            prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
+            if prevFeature is None:
+                prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
             try:
-                prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
-                if prevGood.shape[0] <= 100:
+                prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
+                if prevFeatureFiltered.shape[0] <= 100:
                     raise FeatureError("Not detect feature")
-                featureFlow = calc_flow(prevGood, nextGood)
-                prevFeature = nextGood.reshape(-1, 1, 2)
-                movement = calc_movement(featureFlow)
-                angleVar = calc_angle_variance(featureFlow)
+                sparseFlow = calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered)
+                prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
+                movement = calc_movement(sparseFlow)
+                angleVar = calc_angle_variance(sparseFlow)
                 if angleVar >= angleThresh:
                     raise FeatureError("Not detect feature")
             except FeatureError:
                 prevFeature = None
-                movement = fixDirection_arr[page - 1][time] - fixDirection_arr[page - 1][time - 1]
-            for i in range(3):
-                fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
-            prevImg = nextImg
-
+                movement = latestMovement
+            finally:
+                for i in range(3):
+                    fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
+                latestMovement = movement
     return fixDirection_arr
+
 
 def output_stabilized_video(fixDirection_arr, configFilepath):
     """
@@ -144,6 +145,7 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
     video.release()
 
     print("DONE: output video to {}".format(videoFilepath))
+
 
 def main():
     global TIME_MAX
