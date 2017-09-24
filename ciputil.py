@@ -96,3 +96,18 @@ def read_config_cumulative(configFilepath):
     videoFilepath = config["CUMULATIVE"]["VIDEO_FILEPATH"]
 
     return  page, windowSize, dumpFilepath, videoFilepath
+
+def read_config_dot(configFilepath):
+    try:
+        config = ConfigParser()
+        config.read(configFilepath)
+    except FileNotFoundError:
+        print("Not Found: {}".format(configFilepath))
+        sys.exit(1)
+
+    page = int(config["DOT"]["PAGE"])
+    threshold = int(config["DOT"]["THRESHOLD"])
+    dumpFilepath = config["DOT"]["DUMP_FILEPATH"]
+    videoFilepath = config["DOT"]["VIDEO_FILEPATH"]
+
+    return  page, threshold, dumpFilepath, videoFilepath
