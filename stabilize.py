@@ -33,13 +33,13 @@ def calc_fix_direction():
             prevImg = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
             nextFeature, status, err = cv2.calcOpticalFlowPyrLK(prevImg, nextImg, prevFeature, None, **lk_params)
-            prevGood = prevFeature[status == 1]
-            nextGood = nextFeature[status == 1]
-        return prevGood, nextGood
+            prevFeatureFiltered = prevFeature[status == 1]
+            nextFeatureFiltered = nextFeature[status == 1]
+        return prevFeatureFiltered, nextFeatureFiltered
 
-    def calc_flow(prevGood, nextGood):
-        flow = np.zeros((3,nextGood.shape[0]))
-        for i, (nextPoint, prevPoint) in enumerate(zip(nextGood, prevGood)):
+    def calc_flow(prevFeatureFiltered, nextFeatureFiltered):
+        flow = np.zeros((3,nextFeatureFiltered.shape[0]))
+        for i, (nextPoint, prevPoint) in enumerate(zip(nextFeatureFiltered, prevFeatureFiltered)):
             prevX, prevY = prevPoint.ravel()
             nextX, nextY = nextPoint.ravel()
             flow[0][i] = nextX - prevX
@@ -74,11 +74,11 @@ def calc_fix_direction():
                 prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
             nextImg = ciputil.get_image(time=time, page=page)
             try:
-                prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
-                if prevGood.shape[0] == 0:
+                prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
+                if prevFeatureFiltered.shape[0] == 0:
                     raise FeatureError("Not detect feature")
-                flow = calc_flow(prevGood, nextGood)
-                prevFeature = nextGood.reshape(-1, 1, 2)
+                flow = calc_flow(prevFeatureFiltered, nextFeatureFiltered)
+                prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
                 movement = calc_movement(flow)
                 latestMovement = movement
             except FeatureError:
