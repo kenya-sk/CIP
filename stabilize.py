@@ -39,7 +39,7 @@ def calc_fix_direction():
 
     def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
         sparseFlow = np.zeros((nextFeatureFiltered.shape[0],3))
-        for i, (nextPoint, prevPoint) in enumerate(zip(nextFeatureFiltered, prevFeatureFiltered)):
+        for i, (prevPoint, nextPoint) in enumerate(zip(prevFeatureFiltered, nextFeatureFiltered)):
             prevX, prevY = prevPoint.ravel()
             nextX, nextY = nextPoint.ravel()
             sparseFlow[i][0] = nextX - prevX
