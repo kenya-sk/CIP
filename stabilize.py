@@ -14,7 +14,7 @@ TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
 
-class Feature(Exception):
+class FeatureError(Exception):
     def __init__(self, value):
         self.value = value
 
@@ -33,22 +33,22 @@ def calc_fix_direction():
             prevImg = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
             nextFeature, status, err = cv2.calcOpticalFlowPyrLK(prevImg, nextImg, prevFeature, None, **lk_params)
-            prevGood = prevFeature[status == 1]
-            nextGood = nextFeature[status == 1]
-        return prevGood, nextGood
+            prevFeatureFiltered = prevFeature[status == 1]
+            nextFeatureFiltered = nextFeature[status == 1]
+        return prevFeatureFiltered, nextFeatureFiltered
 
-    def calc_flow(prevGood, nextGood):
-        flow = np.zeros((3,nextGood.shape[0]))
-        for i, (nextPoint, prevPoint) in enumerate(zip(nextGood, prevGood)):
+    def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
+        sparseFlow = np.zeros((nextFeatureFiltered.shape[0],3))
+        for i, (prevPoint, nextPoint) in enumerate(zip(prevFeatureFiltered, nextFeatureFiltered)):
             prevX, prevY = prevPoint.ravel()
             nextX, nextY = nextPoint.ravel()
-            flow[0][i] = nextX - prevX
-            flow[1][i] = nextY - prevY
-        return flow
+            sparseFlow[i][0] = nextX - prevX
+            sparseFlow[i][1] = nextY - prevY
+        return sparseFlow
 
-    def calc_movement(flow):
+    def calc_movement(sparseFlow):
         try:
-            meanX, meanY, meanZ = np.mean(flow,axis=1)
+            meanX, meanY, meanZ = np.mean(sparseFlow,axis=0)
         except ZeroDivisionError:
             meanX, meanY, meanZ = 0, 0, 0
         movement = np.array([meanX, meanY, meanZ])
@@ -74,12 +74,12 @@ def calc_fix_direction():
                 prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
             nextImg = ciputil.get_image(time=time, page=page)
             try:
-                prevGood, nextGood = get_feature(prevImg, nextImg, prevFeature)
-                if prevGood.shape[0] == 0:
+                prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
+                if prevFeatureFiltered.shape[0] == 0:
                     raise FeatureError("Not detect feature")
-                flow = calc_flow(prevGood, nextGood)
-                prevFeature = nextGood.reshape(-1, 1, 2)
-                movement = calc_movement(flow)
+                sparseFlow = calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered)
+                prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
+                movement = calc_movement(sparseFlow)
                 latestMovement = movement
             except FeatureError:
                 prevFeature = None
