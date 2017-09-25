@@ -38,11 +38,11 @@ def calc_dot_product(fixDirection_arr):
         """
         return matrix[960][960] of minimum dot product for each pixel
         """
-        imgSize_x = flow.shape[0]
-        imgSize_y = flow.shape[1]
-        dotProduct = np.zeros((imgSize_x, imgSize_y))
-        for x in range(1, imgSize_x - 1):
-            for y in range(1, imgSize_y - 1):
+        imgSizeX = flow.shape[0]
+        imgSizeY = flow.shape[1]
+        dotProduct = np.zeros((imgSizeX, imgSizeY))
+        for x in range(1, imgSizeX - 1):
+            for y in range(1, imgSizeY - 1):
                 dotProduct[x][y] = np.min([np.dot(flow[x][y], flow[x-1][y-1]),
                                            np.dot(flow[x][y], flow[x-1][y]),
                                            np.dot(flow[x][y], flow[x-1][y+1]),
@@ -93,13 +93,12 @@ def output_dot_video(dotProduct_arr, dotProductThreshold, fixDirection_arr, vide
 def main():
     global TIME_MAX
     global PAGE
-    global OUTPUT_VIDEO
 
     configFilepath = "./config/config.ini"
-    TIME_MAX, _, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
+    TIME_MAX, _, _ = ciputil.read_config(configFilepath)
     PAGE, threshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
-    fixDirection_arr=np.load("./out/fixDirec.npy")
+    fixDirection_arr=np.load("./out/fixDir.npy")
 
     print("START: calculating dense flow and dot product")
     dotProduct_arr = calc_dot_product(fixDirection_arr)
