@@ -63,15 +63,17 @@ def calc_fix_direction():
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
-    angleThresh = 5000
+    angleThresh = 8000 #LEVEL1
+    #angleThresh = 4500 #LEVEL5
+    latestMovement = np.array([0, 0, 0])
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
                             minDistance = 10,
                             blockSize = 5)
 
+    total = np.array([0.0, 0.0, 0.0])
     for time in range(2, TIME_MAX+1):
-        latestMovement = np.array([0, 0, 0])
         for page in range(1, PAGE_MAX + 1):
             prevImg = ciputil.get_image(time=time-1, page=page)
             prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
@@ -92,6 +94,11 @@ def calc_fix_direction():
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
             latestMovement = movement
+            #latestMovement = np.array([0, 0, 0])
+            if page == 1:
+                print("page: {0:03d}, time: {1:03d}, move:{2}, var: {3}".format(page, time, movement, angleVar))
+                total += movement
+    print("total: {}".format(total))
     return fixDirection_arr
 
 
