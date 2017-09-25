@@ -9,6 +9,15 @@ from configparser import ConfigParser
 BASEDIR = None
 LEVEL = None
 
+def set_config(configFilepath):
+    try:
+        config = ConfigParser()
+        config.read(configFilepath)
+    except FileNotFoundError:
+        print("Not Found: {}".format(configFilepath))
+        sys.exit(1)
+    return config
+
 def read_config(configFilepath):
     global BASEDIR
     global LEVEL
@@ -25,13 +34,7 @@ def read_config(configFilepath):
             sys.exit(1)
         return timemax, pagemax
 
-    try:
-        config = ConfigParser()
-        config.read(configFilepath)
-    except FileNotFoundError:
-        print("Not Found: {}".format(configFilepath))
-        sys.exit(1)
-
+    config = set_config(configFilepath)
     BASEDIR = config["DEFAULT"]["BASEDIR"]
     LEVEL = int(config["DEFAULT"]["LEVEL"])
     output_video = config.getboolean("DEFAULT", "OUTPUT_VIDEO")
@@ -83,13 +86,7 @@ def draw_dense_flow(img, flow, step=8):
     return img
 
 def read_config_cumulative(configFilepath):
-    try:
-        config = ConfigParser()
-        config.read(configFilepath)
-    except FileNotFoundError:
-        print("Not Found: {}".format(configFilepath))
-        sys.exit(1)
-
+    config = set_config(configFilepath)
     page = int(config["CUMULATIVE"]["PAGE"])
     windowSize = int(config["CUMULATIVE"]["WINDOW_SIZE"])
     dumpFilepath = config["CUMULATIVE"]["DUMP_FILEPATH"]
