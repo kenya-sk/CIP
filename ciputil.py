@@ -93,3 +93,14 @@ def read_config_cumulative(configFilepath):
     videoFilepath = config["CUMULATIVE"]["VIDEO_FILEPATH"]
 
     return  page, windowSize, dumpFilepath, videoFilepath
+
+def read_config_fixDirection(configFilepath):
+    try:
+        config = ConfigParser()
+        config.read(configFilepath)
+    except FileNotFoundError:
+        print("Not Found: {}".format(configFilepath))
+        sys.exit(1)
+    dumpFilepath = config["FIXDIRECTION"]["DUMP_FILEPATH"]
+
+    return dumpFilepath
