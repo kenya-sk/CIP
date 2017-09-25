@@ -63,7 +63,8 @@ def calc_fix_direction():
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
-    angleThresh = 8000 #LEVEL1
+    #angleThresh = 8000 #LEVEL1
+    angleThresh = 9000
     #angleThresh = 4500 #LEVEL5
     latestMovement = np.array([0, 0, 0])
 
@@ -81,7 +82,7 @@ def calc_fix_direction():
             prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
             try:
                 prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
-                if prevFeatureFiltered.shape[0] <= 100:
+                if prevFeatureFiltered.shape[0] <= 20:
                     raise FeatureError("Not detect feature")
                 sparseFlow = calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered)
                 prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
@@ -94,7 +95,6 @@ def calc_fix_direction():
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
             latestMovement = movement
-            #latestMovement = np.array([0, 0, 0])
             if page == 1:
                 print("page: {0:03d}, time: {1:03d}, move:{2}, var: {3}".format(page, time, movement, angleVar))
                 total += movement
