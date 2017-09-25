@@ -40,18 +40,24 @@ def calc_dot_product(fixDirection_arr):
         """
         imgSizeX = flow.shape[0]
         imgSizeY = flow.shape[1]
-        dotProduct = np.zeros((imgSizeX, imgSizeY))
-        for x in range(1, imgSizeX - 1):
-            for y in range(1, imgSizeY - 1):
-                dotProduct[x][y] = np.min([np.dot(flow[x][y], flow[x-1][y-1]),
-                                           np.dot(flow[x][y], flow[x-1][y]),
-                                           np.dot(flow[x][y], flow[x-1][y+1]),
-                                           np.dot(flow[x][y], flow[x][y-1]),
-                                           np.dot(flow[x][y], flow[x][y+1]),
-                                           np.dot(flow[x][y], flow[x+1][y-1]),
-                                           np.dot(flow[x][y], flow[x+1][y]),
-                                           np.dot(flow[x][y], flow[x+1][y+1])])
-        return dotProduct
+        dotProductNeighbor = np.zeros ((10, imgSizeX + 2, imgSizeY + 2))
+
+        flowMargin = np.zeros((imgSizeX + 2, imgSizeY + 2, 2))
+        flowMargin[1:-1, 1:-1] = flow
+
+        shiftIterator = 0
+        for xShift in range(0, 2):
+            for yShift in range(-1, 2):
+                if (xShift != 0 or yShift != 0):
+                    shifted = np.zeros((imgSizeX + 2, imgSizeY + 2, 2))
+                    shifted[1 + xShift : imgSizeX + xShift + 1, 1 + yShift : imgSizeY + yShift + 1] = flow
+                    dotProductNeighbor[shiftIterator] = np.sum(flowMargin * shifted, axis=2)
+                    dotProductNeighbor[shiftIterator + 1][1:-1, 1:-1] \
+                        = dotProductNeighbor[shiftIterator][1 + xShift : imgSizeX + xShift + 1, 1 + yShift : imgSizeY + yShift + 1]
+                    shiftIterator += 2
+        dotProduct = np.min(dotProductNeighbor, axis=0)
+
+        return dotProduct[1:-1,1:-1]
 
     prevImg = ciputil.get_image(time=1, page=PAGE)
     prevFixImg = ciputil.get_stabilized_image(prevImg, fixDirection_arr[PAGE][1])
@@ -95,7 +101,7 @@ def main():
     global PAGE
 
     configFilepath = "./config/config.ini"
-    TIME_MAX, _, _ = ciputil.read_config(configFilepath)
+    TIME_MAX, _, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
     PAGE, threshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
     fixDirection_arr=np.load("./out/fixDir.npy")
