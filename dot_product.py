@@ -38,22 +38,22 @@ def calc_dot_product(fixDirection_arr):
         """
         return matrix[960][960] of minimum dot product for each pixel
         """
-        imgSizeX = flow.shape[0]
-        imgSizeY = flow.shape[1]
-        dotProductNeighbor = np.zeros ((10, imgSizeX + 2, imgSizeY + 2))
+        height = flow.shape[0]
+        width = flow.shape[1]
+        dotProductNeighbor = np.zeros ((10, height + 2, width + 2))
 
-        flowMargin = np.zeros((imgSizeX + 2, imgSizeY + 2, 2))
+        flowMargin = np.zeros((height + 2, width + 2, 2))
         flowMargin[1:-1, 1:-1] = flow
 
         shiftIterator = 0
         for xShift in range(0, 2):
             for yShift in range(-1, 2):
                 if (xShift != 0 or yShift != 0):
-                    shifted = np.zeros((imgSizeX + 2, imgSizeY + 2, 2))
-                    shifted[1 + xShift : imgSizeX + xShift + 1, 1 + yShift : imgSizeY + yShift + 1] = flow
+                    shifted = np.zeros((height + 2, width + 2, 2))
+                    shifted[1 + xShift : height + xShift + 1, 1 + yShift : width + yShift + 1] = flow
                     dotProductNeighbor[shiftIterator] = np.sum(flowMargin * shifted, axis=2)
                     dotProductNeighbor[shiftIterator + 1][1:-1, 1:-1] \
-                        = dotProductNeighbor[shiftIterator][1 + xShift : imgSizeX + xShift + 1, 1 + yShift : imgSizeY + yShift + 1]
+                        = dotProductNeighbor[shiftIterator][1 + xShift : height + xShift + 1, 1 + yShift : width + yShift + 1]
                     shiftIterator += 2
         dotProduct = np.min(dotProductNeighbor, axis=0)
 
