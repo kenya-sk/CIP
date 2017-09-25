@@ -64,7 +64,6 @@ def calc_fix_direction():
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
     angleThresh = 5000
-    latestMovement = np.array([0, 0, 0])
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
@@ -72,8 +71,8 @@ def calc_fix_direction():
                             blockSize = 5)
 
     for time in range(2, TIME_MAX+1):
-        #for page in range(1, PAGE_MAX + 1):
-        for page in range(PAGE_MAX, 0, -1):
+        latestMovement = np.array([0, 0, 0])
+        for page in range(1, PAGE_MAX + 1):
             prevImg = ciputil.get_image(time=time-1, page=page)
             prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
@@ -88,11 +87,11 @@ def calc_fix_direction():
                 angleVar = calc_angle_variance(sparseFlow)
                 if angleVar >= angleThresh:
                     raise FeatureError("Not detect feature")
-                latestMovement = movement
             except FeatureError:
                 movement = latestMovement
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
+            latestMovement = movement
     return fixDirection_arr
 
 
