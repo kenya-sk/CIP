@@ -40,16 +40,20 @@ def calc_dot_product(fixDirection_arr):
         """
         height = flow.shape[0]
         width = flow.shape[1]
-        dotProductNeighbor = np.zeros ((10, height + 2, width + 2))
 
-        flowMargin = np.zeros((height + 2, width + 2, 2))
+        heightMargin = height + 2
+        widthMargin = width + 2
+
+        dotProductNeighbor = np.zeros ((10, heightMargin, widthMargin))
+
+        flowMargin = np.zeros((heightMargin, widthMargin, 2))
         flowMargin[1:-1, 1:-1] = flow
 
         shiftIterator = 0
-        for xShift in range(0, 2):
-            for yShift in range(-1, 2):
+        for xShift in (0, 1):
+            for yShift in (-1, 0, 1):
                 if (xShift != 0 or yShift != 0):
-                    shifted = np.zeros((height + 2, width + 2, 2))
+                    shifted = np.zeros((heightMargin, widthMargin, 2))
                     shifted[1 + xShift : height + xShift + 1, 1 + yShift : width + yShift + 1] = flow
                     dotProductNeighbor[shiftIterator] = np.sum(flowMargin * shifted, axis=2)
                     dotProductNeighbor[shiftIterator + 1][1:-1, 1:-1] \
@@ -104,7 +108,8 @@ def main():
     TIME_MAX, _, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
     PAGE, threshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
-    fixDirection_arr=np.load("./out/fixDir.npy")
+    fixDirectionFilepath=ciputil.read_config_fixDirection(configFilepath)
+    fixDirection_arr = np.load(fixDirectionFilepath)
 
     print("START: calculating dense flow and dot product")
     dotProduct_arr = calc_dot_product(fixDirection_arr)
