@@ -21,7 +21,7 @@ class FeatureError(Exception):
 def calc_fix_direction():
     """
     calculate fix direction for at each time point.
-    fixDirection_arr[page][time][xyz] = [1-PAGE_MAX][1-TIME_MAX+1](fixDirectionX, fixDirectionY, fixDirectionZ)
+    fixDirection_arr[page][time][xyz] = [1~PAGE_MAX][1~TIME_MAX](fixDirectionX, fixDirectionY, fixDirectionZ)
     """
     def get_feature(prevImg, nextImg, prevFeature):
         assert prevImg.shape == nextImg.shape
@@ -48,47 +48,62 @@ def calc_fix_direction():
 
     def calc_movement(sparseFlow):
         try:
-            meanX, meanY, meanZ = np.mean(sparseFlow,axis=0)
+            meanX, meanY, meanZ = np.mean(sparseFlow, axis=0)
         except ZeroDivisionError:
             meanX, meanY, meanZ = 0, 0, 0
         movement = np.array([meanX, meanY, meanZ])
         return movement
 
+    def calc_angle_variance(sparseFlow):
+        sparseFlowX = sparseFlow[:, 0]
+        sparseFlowY = sparseFlow[:, 1]
+        angle_arr = np.arctan2(sparseFlowX, sparseFlowY) * 180 / np.pi
+        angleVar = np.var(angle_arr)
+        return angleVar
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
+    #angleThresh = 8000 #LEVEL1
+    angleThresh = 9000
+    #angleThresh = 4500 #LEVEL5
     latestMovement = np.array([0, 0, 0])
+    angleVar_arr = np.zeros((PAGE_MAX+1, TIME_MAX+1))
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
                             minDistance = 10,
                             blockSize = 5)
 
-    for page in range(1, PAGE_MAX + 1):
-        prevImg = ciputil.get_image(time=1, page=page)
-        prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
-        prevFeature = None
-        for time in range(2, TIME_MAX + 1):
-            if prevFeature is None:
-                prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
-                prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
+    for time in range(2, TIME_MAX+1):
+        for page in range(1, PAGE_MAX + 1):
+            prevImg = ciputil.get_image(time=time-1, page=page)
+            prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
+            prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
             try:
                 prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
-                if prevFeatureFiltered.shape[0] == 0:
+                if prevFeatureFiltered.shape[0] <= 20:
                     raise FeatureError("Not detect feature")
                 sparseFlow = calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered)
                 prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
                 movement = calc_movement(sparseFlow)
-                latestMovement = movement
+                angleVar = calc_angle_variance(sparseFlow)
+                angleVar_arr[page][time] = angleVar
+                if angleVar >= angleThresh:
+                    raise FeatureError("Not detect feature")
             except FeatureError:
-                prevFeature = None
                 movement = latestMovement
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
-            prevImg = nextImg
-
+            latestMovement = movement
+    """
+    for page in range(1, PAGE_MAX+1):
+        print("page:{0}/({1})".format(page, PAGE_MAX))
+        plt.plot(angleVar_arr[page])
+    plt.savefig("./out/angleVar.png")
+    """
     return fixDirection_arr
+
 
 def output_stabilized_video(fixDirection_arr, configFilepath):
     """
@@ -129,12 +144,16 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
             text = '[{0:03d},{1:03d},{2:03d}]'.format(fixDirectionX, fixDirectionY,fixDirectionZ)
             cv2.putText(fixImg, text, (fixWidth - 300, fixHeight - 25),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
+            data = "[page: {0:03d} time: {1:03d}]".format(page, time)
+            cv2.putText(fixImg, data, (fixWidth - 800, fixHeight - 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
             video.write(fixImg)
         for _ in range(10):
             video.write(waitImg)
     video.release()
 
     print("DONE: output video to {}".format(videoFilepath))
+
 
 def main():
     global TIME_MAX
