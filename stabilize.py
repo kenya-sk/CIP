@@ -67,13 +67,13 @@ def calc_fix_direction():
     angleThresh = 9000
     #angleThresh = 4500 #LEVEL5
     latestMovement = np.array([0, 0, 0])
+    angleVar_arr = np.zeros((PAGE_MAX+1, TIME_MAX+1))
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
                             minDistance = 10,
                             blockSize = 5)
 
-    total = np.array([0.0, 0.0, 0.0])
     for time in range(2, TIME_MAX+1):
         for page in range(1, PAGE_MAX + 1):
             prevImg = ciputil.get_image(time=time-1, page=page)
@@ -88,6 +88,7 @@ def calc_fix_direction():
                 prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
                 movement = calc_movement(sparseFlow)
                 angleVar = calc_angle_variance(sparseFlow)
+                angleVar_arr[page][time] = angleVar
                 if angleVar >= angleThresh:
                     raise FeatureError("Not detect feature")
             except FeatureError:
@@ -95,10 +96,12 @@ def calc_fix_direction():
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
             latestMovement = movement
-            if page == 1:
-                print("page: {0:03d}, time: {1:03d}, move:{2}, var: {3}".format(page, time, movement, angleVar))
-                total += movement
-    print("total: {}".format(total))
+    """
+    for page in range(1, PAGE_MAX+1):
+        print("page:{0}/({1})".format(page, PAGE_MAX))
+        plt.plot(angleVar_arr[page])
+    plt.savefig("./out/angleVar.png")
+    """
     return fixDirection_arr
 
 
