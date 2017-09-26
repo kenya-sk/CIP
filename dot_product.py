@@ -25,7 +25,7 @@ TIME_MAX = None
 PAGE = None
 OUTPUT_VIDEO = None
 
-def calc_dot_product(fixDirection_arr, windowSize):
+def calc_dot_product(cmlFlow_arr, windowSize):
     """
     return dotProduct_arr[time][960][960], 1 origin time
     """
@@ -64,17 +64,11 @@ def calc_dot_product(fixDirection_arr, windowSize):
 
         return dotProduct[margin:-margin,margin:-margin]
     
-    prevImg = ciputil.get_image(time=1, page=PAGE)
-    prevFixImg = ciputil.get_stabilized_image(prevImg, fixDirection_arr[PAGE][1])
-
     dotProduct_arr = np.zeros((TIME_MAX + 1, 960, 960))
 
-    for time in range(2, TIME_MAX + 1):
-        nextImg = ciputil.get_image(time=time, page=PAGE)
-        nextFixImg = ciputil.get_stabilized_image(nextImg, fixDirection_arr[PAGE][time])
-
-        denseFlow = ciputil.calc_dense_flow(prevFixImg, nextFixImg)
-        dotProduct_arr[time] = dot_product(denseFlow, windowSize)
+    for time in range(1, TIME_MAX):
+        cmlFlow = cmlFlow_arr[time]
+        dotProduct_arr[time] = dot_product(cmlFlow, windowSize)
 
     return dotProduct_arr
 
@@ -107,17 +101,21 @@ def main():
 
     configFilepath = "./config/config.ini"
     TIME_MAX, _, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
-    PAGE, threshold, windowSize, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
-    fixDirectionFilepath=ciputil.read_config_fixDirection(configFilepath)
-    fixDirection_arr = np.load(fixDirectionFilepath)
 
-    print("START: calculating dense flow and dot product")
-    dotProduct_arr = calc_dot_product(fixDirection_arr, windowSize)
+    PAGE, windowSize, cmlFlowFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
+    cmlFlow_arr = np.load(cmlFlowFilepath)
+
+    windowSize, threshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
+
+    print("START: calculating dot product")
+    dotProduct_arr = calc_dot_product(cmlFlow_arr, windowSize)
     np.save(dumpFilepath, dotProduct_arr)
     print("DONE: dump to {}".format(dumpFilepath))
 
     if OUTPUT_VIDEO:
+        fixDirectionFilepath=ciputil.read_config_fixDirection(configFilepath)
+        fixDirection_arr = np.load(fixDirectionFilepath)
         output_dot_video(dotProduct_arr, threshold, fixDirection_arr,videoFilepath)
         print("DONE: output video to {}".format(videoFilepath))
 

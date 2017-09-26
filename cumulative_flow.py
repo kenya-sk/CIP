@@ -90,8 +90,9 @@ def main():
     configFilepath = "./config/config.ini"
     TIME_MAX, _, outputVideo = ciputil.read_config(configFilepath)
     PAGE, windowSize, dumpFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
-    
-    fixDirection_arr=np.load( "./fixDir.npy")
+
+    fixDirectionFilepath = ciputil.read_config_fixDirection(configFilepath)
+    fixDirection_arr=np.load(fixDirectionFilepath)
     
     print("START: calculate stabilized dense flows")
     flow_arr = calc_stabilized_flows(fixDirection_arr)
