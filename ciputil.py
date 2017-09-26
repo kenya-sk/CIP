@@ -104,7 +104,8 @@ def read_config_dot(configFilepath):
     config = set_config(configFilepath)
     page = int(config["DOT"]["PAGE"])
     threshold = int(config["DOT"]["THRESHOLD"])
+    windowSize = int(config["DOT"]["WINDOW_SIZE"])
     dumpFilepath = config["DOT"]["DUMP_FILEPATH"]
     videoFilepath = config["DOT"]["VIDEO_FILEPATH"]
 
-    return  page, threshold, dumpFilepath, videoFilepath
+    return  page, threshold, windowSize, dumpFilepath, videoFilepath

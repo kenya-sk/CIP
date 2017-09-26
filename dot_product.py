@@ -5,14 +5,10 @@
 Calc dot product for a certain page.
 
 Please configure in [DOT] section of config file.
-    PAGE = 32
-    THRESHOLD = -3
-    VIDEO_FILEPATH = ./out/dot_3.mp4
-
     PAGE :           page to be calculate cumulative flow.
     THRESHOLD :      If a pixel has dot product value under THRESHOLD, it is drawn with a red circle in video.
+    WINDOW_SIZE :    The size of neibor pixel window. Set ODD NUMBER and GREATOR THAN 3.
     DUMP_FILEPATH :  filepath to dump dotProduct_arr
-
     VIDEO_FILEPATH : filepath to output video. only used when  DEFAULT.OUTPUT_VIDEO = yes
 """
 
@@ -29,12 +25,12 @@ TIME_MAX = None
 PAGE = None
 OUTPUT_VIDEO = None
 
-def calc_dot_product(fixDirection_arr):
+def calc_dot_product(fixDirection_arr, windowSize):
     """
     return dotProduct_arr[time][960][960], 1 origin time
     """
 
-    def dot_product(flow):
+    def dot_product(flow, windowSize):
         """
         return matrix[960][960] of minimum dot product for each pixel
         """
@@ -42,27 +38,32 @@ def calc_dot_product(fixDirection_arr):
         assert flow.shape[0] == flow.shape[1]
         width = flow.shape[0]
 
-        widthMargin = width + 2
+        margin = int(windowSize/2)
+        widthMargin = width + margin*2 #two direction +, -
 
-        dotProductNeighbor = np.zeros ((10, widthMargin, widthMargin))
+        neighborNum = ((margin + 1)*(margin*2 + 1) - 1)*2 #((num of xShift) * (num of yShift) - (0,0)) * (reverse direction)
+        dotProductNeighbor = np.zeros ((neighborNum, widthMargin, widthMargin))
 
         flowMargin = np.zeros((widthMargin, widthMargin, 2))
-        flowMargin[1:-1, 1:-1] = flow
+        flowMargin[margin:-margin, margin:-margin] = flow
 
         shiftIterator = 0
-        for xShift in (0, 1):
-            for yShift in (-1, 0, 1):
+        for xShift in range(margin + 1):
+            for yShift in range(-margin, margin + 1):
                 if (xShift != 0 or yShift != 0):
                     shifted = np.zeros((widthMargin, widthMargin, 2))
-                    shifted[1 + xShift : width + xShift + 1, 1 + yShift : width + yShift + 1] = flow
+                    shifted[margin + xShift : width + margin + xShift, margin + yShift : width + margin + yShift] = flow
                     dotProductNeighbor[shiftIterator] = np.sum(flowMargin * shifted, axis=2)
-                    dotProductNeighbor[shiftIterator + 1][1:-1, 1:-1] \
-                        = dotProductNeighbor[shiftIterator][1 + xShift : width + xShift + 1, 1 + yShift : width + yShift + 1]
+                    dotProductNeighbor[shiftIterator + 1][margin:-margin, margin:-margin] \
+                        = dotProductNeighbor[shiftIterator][margin + xShift : width + margin + xShift, margin + yShift : width + margin + yShift]
                     shiftIterator += 2
+
+        assert shiftIterator == neighborNum
+
         dotProduct = np.min(dotProductNeighbor, axis=0)
 
-        return dotProduct[1:-1,1:-1]
-
+        return dotProduct[margin:-margin,margin:-margin]
+    
     prevImg = ciputil.get_image(time=1, page=PAGE)
     prevFixImg = ciputil.get_stabilized_image(prevImg, fixDirection_arr[PAGE][1])
 
@@ -73,7 +74,7 @@ def calc_dot_product(fixDirection_arr):
         nextFixImg = ciputil.get_stabilized_image(nextImg, fixDirection_arr[PAGE][time])
 
         denseFlow = ciputil.calc_dense_flow(prevFixImg, nextFixImg)
-        dotProduct_arr[time] = dot_product(denseFlow)
+        dotProduct_arr[time] = dot_product(denseFlow, windowSize)
 
     return dotProduct_arr
 
@@ -106,13 +107,13 @@ def main():
 
     configFilepath = "./config/config.ini"
     TIME_MAX, _, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
-    PAGE, threshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
+    PAGE, threshold, windowSize, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
     fixDirectionFilepath=ciputil.read_config_fixDirection(configFilepath)
     fixDirection_arr = np.load(fixDirectionFilepath)
 
     print("START: calculating dense flow and dot product")
-    dotProduct_arr = calc_dot_product(fixDirection_arr)
+    dotProduct_arr = calc_dot_product(fixDirection_arr, windowSize)
     np.save(dumpFilepath, dotProduct_arr)
     print("DONE: dump to {}".format(dumpFilepath))
 
