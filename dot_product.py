@@ -43,6 +43,8 @@ def calc_dot_product(cmlFlow_arr, windowSize):
 
         neighborNum = ((margin + 1)*(margin*2 + 1) - 1)*2 #((num of xShift) * (num of yShift) - (0,0)) * (reverse direction)
         dotProductNeighbor = np.zeros ((neighborNum, widthMargin, widthMargin))
+        
+        flow[np.sum(flow*flow, axis=2) < 1]=[0,0]
 
         flowMargin = np.zeros((widthMargin, widthMargin, 2))
         flowMargin[margin:-margin, margin:-margin] = flow
@@ -89,8 +91,8 @@ def output_dot_video(dotProduct_arr, dotProductThreshold, fixDirection_arr, vide
 
         dotImg = stabImg
         for i in range(len(reversePoint_arr[0])):
-            x = reversePoint_arr[0][i]
-            y = reversePoint_arr[1][i]
+            x = reversePoint_arr[1][i]
+            y = reversePoint_arr[0][i]
             dotImg = cv2.circle(dotImg, (x, y), 8, (255,0,0), -1)
         video.write(dotImg)
     video.release()
