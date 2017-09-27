@@ -67,7 +67,7 @@ def calc_dot_product(cmlFlow_arr, windowSize, flowThreshold):
         return dotProduct[margin:-margin,margin:-margin]
     
     dotProduct_arr = np.zeros((TIME_MAX + 1, 960, 960))
-    for time in range(1, TIME_MAX):
+    for time in range(2, TIME_MAX + 1):
         cmlFlow = cmlFlow_arr[time]
         dotProduct_arr[time] = dot_product(cmlFlow, windowSize, flowThreshold)
     return dotProduct_arr
@@ -104,11 +104,9 @@ def main():
     configFilepath = "./config/config.ini"
     TIME_MAX, _, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
 
-
     PAGE, windowSize, cmlFlowFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
     cmlFlow_arr = np.load(cmlFlowFilepath)
-
-    windowSize, flowThreshold, dotThreshold, recalculate, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
+    recalculate, windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
     if recalculate:
         print("START: calculating dot product")
