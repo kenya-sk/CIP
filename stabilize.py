@@ -38,6 +38,13 @@ def calc_fix_direction(angleThresh):
             nextFeatureFiltered = nextFeature[status == 1]
         return prevFeatureFiltered, nextFeatureFiltered
 
+    def get_binarization(gray):
+        """
+        The threshold is determined by the Otus algorithm
+        """
+        _, binaryImg = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        return binaryImg
+
     def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
         sparseFlow = np.zeros((nextFeatureFiltered.shape[0],3))
         for i, (prevPoint, nextPoint) in enumerate(zip(prevFeatureFiltered, nextFeatureFiltered)):
@@ -77,10 +84,11 @@ def calc_fix_direction(angleThresh):
             prevImg = ciputil.get_image(time=time-1, page=page)
             prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
-            prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
+            flowMask = get_binarization(prevGray)
+            prevFeature = cv2.goodFegit aturesToTrack(prevGray, mask=flowMask, **feature_params)
             try:
                 prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
-                if prevFeatureFiltered.shape[0] <= 20:
+                if prevFeatureFiltered.shape[0] <= 50:
                     raise FeatureError("Not detect feature")
                 sparseFlow = calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered)
                 prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
