@@ -110,3 +110,9 @@ def read_config_dot(configFilepath):
     videoFilepath = config["DOT"]["VIDEO_FILEPATH"]
 
     return  windowSize, flowThreshold, dotThreshold, calcDotFlag, dumpFilepath, videoFilepath
+
+def get_angleThresh(configFilepath):
+    config = set_config(configFilepath)
+    angleThresh = int(config["STABILIZE"]["ANGLE_THRESH"])
+
+    return angleThresh

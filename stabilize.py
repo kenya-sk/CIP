@@ -18,10 +18,11 @@ class FeatureError(Exception):
     def __init__(self, value):
         self.value = value
 
-def calc_fix_direction():
+def calc_fix_direction(angleThresh):
     """
     calculate fix direction for at each time point.
-    fixDirection_arr[page][time][xyz] = [1~PAGE_MAX][1~TIME_MAX](fixDirectionX, fixDirectionY, fixDirectionZ)
+    fixDirection_arr[page][time] = fixDirectionX, fixDirectionY, fixDirectionZ
+    (page: 1 ~ PAGE_MAX, time: 1 ~ TIME_MAX)
     """
     def get_feature(prevImg, nextImg, prevFeature):
         assert prevImg.shape == nextImg.shape
@@ -36,6 +37,13 @@ def calc_fix_direction():
             prevFeatureFiltered = prevFeature[status == 1]
             nextFeatureFiltered = nextFeature[status == 1]
         return prevFeatureFiltered, nextFeatureFiltered
+
+    def get_binarization(gray):
+        """
+        The threshold is determined by the Otus algorithm
+        """
+        _, binaryImg = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        return binaryImg
 
     def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
         sparseFlow = np.zeros((nextFeatureFiltered.shape[0],3))
@@ -63,9 +71,6 @@ def calc_fix_direction():
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
-    #angleThresh = 8000 #LEVEL1
-    angleThresh = 9000
-    #angleThresh = 4500 #LEVEL5
     latestMovement = np.array([0, 0, 0])
     angleVar_arr = np.zeros((PAGE_MAX+1, TIME_MAX+1))
 
@@ -79,29 +84,24 @@ def calc_fix_direction():
             prevImg = ciputil.get_image(time=time-1, page=page)
             prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
-            prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
+            flowMask = get_binarization(prevGray)
+            prevFeature = cv2.goodFegit aturesToTrack(prevGray, mask=flowMask, **feature_params)
             try:
                 prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
-                if prevFeatureFiltered.shape[0] <= 20:
+                if prevFeatureFiltered.shape[0] <= 50:
                     raise FeatureError("Not detect feature")
                 sparseFlow = calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered)
                 prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
-                movement = calc_movement(sparseFlow)
                 angleVar = calc_angle_variance(sparseFlow)
                 angleVar_arr[page][time] = angleVar
                 if angleVar >= angleThresh:
                     raise FeatureError("Not detect feature")
+                movement = calc_movement(sparseFlow)
+                latestMovement = movement
             except FeatureError:
                 movement = latestMovement
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
-            latestMovement = movement
-    """
-    for page in range(1, PAGE_MAX+1):
-        print("page:{0}/({1})".format(page, PAGE_MAX))
-        plt.plot(angleVar_arr[page])
-    plt.savefig("./out/angleVar.png")
-    """
     return fixDirection_arr
 
 
@@ -163,7 +163,8 @@ def main():
     configFilepath = "./config/config.ini"
     TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
     dumpFilepath = ciputil.read_config_fixDirection(configFilepath)
-    fixDirection_arr = calc_fix_direction()
+    angleThresh = ciputil.get_angleThresh(configFilepath)
+    fixDirection_arr = calc_fix_direction(angleThresh)
     np.save(dumpFilepath, fixDirection_arr)
     print("DONE:  calcurate fix direction")
 
