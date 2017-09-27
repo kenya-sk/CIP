@@ -102,10 +102,11 @@ def read_config_fixDirection(configFilepath):
 
 def read_config_dot(configFilepath):
     config = set_config(configFilepath)
-    windowSize = int(config["DOT"]["WINDOW_SIZE"])
     flowThreshold = int(config["DOT"]["FLOW_THRESHOLD"])
     dotThreshold = int(config["DOT"]["DOT_THRESHOLD"])
+    windowSize = int(config["DOT"]["WINDOW_SIZE"])
+    calcDotFlag = config.getboolean("DOT", "CALC_DOT_FLAG")
     dumpFilepath = config["DOT"]["DUMP_FILEPATH"]
     videoFilepath = config["DOT"]["VIDEO_FILEPATH"]
 
-    return  windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath
+    return  windowSize, flowThreshold, dotThreshold, calcDotFlag, dumpFilepath, videoFilepath

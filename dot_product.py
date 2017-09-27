@@ -9,6 +9,7 @@ Please configure in [DOT] section of config file.
     FLOW_THRESHOLD:  If a pixel has flow with norm under FLOW_THRESHOLD, the flow is rounded to (0,0).
     DOT_THRESHOLD :  If a pixel has dot product value under DOT_THRESHOLD, it is drawn with a red circle in video.
     WINDOW_SIZE :    The size of neibor pixel window. Set ODD NUMBER and GREATOR THAN 3.
+    CALC_DOT_FLAG:   Whether calculate the dot product array or not.
     DUMP_FILEPATH :  filepath to dump dotProduct_arr
     VIDEO_FILEPATH : filepath to output video. only used when  DEFAULT.OUTPUT_VIDEO = yes
 """
@@ -94,7 +95,7 @@ def output_dot_video(dotProduct_arr, dotProductThreshold, fixDirection_arr, vide
         for i in range(len(reversePoint_arr[0])):
             x = reversePoint_arr[1][i]
             y = reversePoint_arr[0][i]
-            dotImg = cv2.circle(dotImg, (x, y), 8, (255,0,0), -1)
+            dotImg = cv2.circle(dotImg, (x, y), 3, (255,0,0), -1)
         video.write(dotImg)
     video.release()
 
@@ -109,12 +110,17 @@ def main():
     PAGE, windowSize, cmlFlowFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
     cmlFlow_arr = np.load(cmlFlowFilepath)
 
-    windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
+    windowSize, flowThreshold, dotThreshold, calcDotFlag, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
-    print("START: calculating dot product")
-    dotProduct_arr = calc_dot_product(cmlFlow_arr, windowSize, flowThreshold)
-    np.save(dumpFilepath, dotProduct_arr)
-    print("DONE: dump to {}".format(dumpFilepath))
+    if calcDotFlag:
+        print("START: calculating dot product")
+        dotProduct_arr = calc_dot_product(cmlFlow_arr, windowSize, flowThreshold)
+        np.save(dumpFilepath, dotProduct_arr)
+        print("DONE: dump to {}".format(dumpFilepath))
+    else:
+        print("START: load dot product array from {}".format(dumpFilepath))
+        dotProduct_arr = np.load(dumpFilepath)
+        print("DONE: load dot product array")
 
     if OUTPUT_VIDEO:
         fixDirectionFilepath=ciputil.read_config_fixDirection(configFilepath)
