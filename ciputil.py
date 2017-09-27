@@ -107,6 +107,6 @@ def read_config_fixDirection(configFilepath):
 
 def get_angleThresh(configFilepath):
     config = set_config(configFilepath)
-    angleThresh = config["STABILIZE"]["ANGLE_THRESH"]
+    angleThresh = int(config["STABILIZE"]["ANGLE_THRESH"])
 
     return angleThresh
