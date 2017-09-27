@@ -8,15 +8,17 @@ import cv2
 from configparser import ConfigParser
 import ciputil
 
-LEVEL = None
 TIME_MAX = None
 PAGE_MAX = None
 OUTPUT_VIDEO = None
 
+class FeatureError(Exception):
+    def __init__(self, value):
+        self.value = value
 
 def output_video_with_flow(configFilepath):
     #------------------------------------------
-    # pre processing 
+    # pre processing
     #------------------------------------------
     config = ConfigParser()
     config.read(configFilepath)
@@ -47,12 +49,12 @@ def output_video_with_flow(configFilepath):
                         criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
     for page in range(pageFirst, pageLast + 1):
-        prevImg = ciputil.get_image(LEVEL, 1, page)
+        prevImg = ciputil.get_image(1, page)
         prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
         prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=None, **feature_params)
         for time in range(1, TIME_MAX + 1):
             mask = np.zeros((480, 480, 3), np.uint8)
-            nextImg = ciputil.get_image(LEVEL, time, page)
+            nextImg = ciputil.get_image(time, page)
             nextGray = cv2.cvtColor(nextImg, cv2.COLOR_BGR2GRAY)
             nextFeature, status, err = cv2.calcOpticalFlowPyrLK(prevGray, nextGray, prevFeature, None, **lk_params)
             prevGood = prevFeature[status == 1]
@@ -64,6 +66,9 @@ def output_video_with_flow(configFilepath):
                 mask = cv2.line(mask, (nextX, nextY), (prevX, prevY), (0, 0, 255), 2)
                 img = cv2.circle(nextImg, (nextX, nextY), 5, (0,0,255), -1)
             img = cv2.add(img, mask)
+            data = "[page: {0:03d} time: {1:03d}]".format(page, time)
+            cv2.putText(img, data, (100, 430),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
             video.write(img)
             prevGray = nextGray
             prevFeature = nextGood.reshape(-1, 1, 2)
@@ -75,14 +80,13 @@ def output_video_with_flow(configFilepath):
 
 
 def main():
-    global LEVEL
     global TIME_MAX
     global PAGE_MAX
     global OUTPUT_VIDEO
 
     configFilepath = "./config/config.ini"
-    LEVEL, TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
-    
+    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
+
     if OUTPUT_VIDEO:
         output_video_with_flow(configFilepath)
 
