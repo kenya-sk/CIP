@@ -95,15 +95,21 @@ def read_config_cumulative(configFilepath):
     return  page, windowSize, dumpFilepath, videoFilepath
 
 def read_config_fixDirection(configFilepath):
-    try:
-        config = ConfigParser()
-        config.read(configFilepath)
-    except FileNotFoundError:
-        print("Not Found: {}".format(configFilepath))
-        sys.exit(1)
+    config = set_config(configFilepath)
     dumpFilepath = config["FIXDIRECTION"]["DUMP_FILEPATH"]
 
     return dumpFilepath
+
+def read_config_dot(configFilepath):
+    config = set_config(configFilepath)
+    recalculate = config.getboolean("DOT", "RECALCULATE")
+    windowSize = int(config["DOT"]["WINDOW_SIZE"])
+    flowThreshold = int(config["DOT"]["FLOW_THRESHOLD"])
+    dotThreshold = int(config["DOT"]["DOT_THRESHOLD"])
+    dumpFilepath = config["DOT"]["DUMP_FILEPATH"]
+    videoFilepath = config["DOT"]["VIDEO_FILEPATH"]
+
+    return recalculate, windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath
 
 def get_angleThresh(configFilepath):
     config = set_config(configFilepath)

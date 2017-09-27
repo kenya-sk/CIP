@@ -165,7 +165,6 @@ def main():
     dumpFilepath = ciputil.read_config_fixDirection(configFilepath)
     angleThresh = ciputil.get_angleThresh(configFilepath)
     fixDirection_arr = calc_fix_direction(angleThresh)
-
     np.save(dumpFilepath, fixDirection_arr)
     print("DONE:  calcurate fix direction")
 
