@@ -23,17 +23,17 @@ PAGE = None
 
 def calc_stabilized_flows(fixDirection_arr):
     """
-    return flow_arr[time][960][960][2], 1 origin time
+    return flow_arr[time+1][960][960][2], 1 origin time
     """
-    flow_arr = np.zeros((TIME_MAX, 960, 960, 2))#1 origin flow_arr[time] means change between (time, time+1)
+    flow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))#1 origin flow_arr[time] means change between (time - 1, time)
 
     prevImg = ciputil.get_image(time=1, page=PAGE)
     prevStabImg = ciputil.get_stabilized_image(prevImg, fixDirection_arr[PAGE][1])
 
-    for time in range(1, TIME_MAX):
+    for time in range(2, TIME_MAX + 1):
         print("time:{}".format(time))
-        nextImg = ciputil.get_image(time=time + 1, page=PAGE)
-        nextStabImg = ciputil.get_stabilized_image(nextImg, fixDirection_arr[PAGE][time + 1])
+        nextImg = ciputil.get_image(time=time, page=PAGE)
+        nextStabImg = ciputil.get_stabilized_image(nextImg, fixDirection_arr[PAGE][time])
         flow = ciputil.calc_dense_flow(prevStabImg, nextStabImg)
         flow_arr[time] = flow
         prevStabImg = nextStabImg   
@@ -41,7 +41,7 @@ def calc_stabilized_flows(fixDirection_arr):
 
 def calc_cumulative_flows(flow_arr, windowSize):
     """
-    return cmlFlow_arr[time][960][960][2], 1 origin time
+    return cmlFlow_arr[time+1][960][960][2], 1 origin time
     """
     def cumulate(flow_arr):
         cmlFlow = np.zeros((960, 960, 2))
@@ -58,14 +58,15 @@ def calc_cumulative_flows(flow_arr, windowSize):
                 cmlFlow[x][y][1] = j - y
         return cmlFlow
     
-    assert flow_arr.shape == (TIME_MAX, 960, 960, 2)
-    assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2))) #assert 1 origin
+    assert flow_arr.shape == (TIME_MAX + 1, 960, 960, 2)
+    assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2)))
+    assert np.array_equal(flow_arr[1], np.zeros((960, 960, 2)))
     
-    cmlFlow_arr = np.zeros((TIME_MAX, 960, 960, 2))
-    for time in range(1, TIME_MAX):
+    cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
+    for time in range(2, TIME_MAX + 1):
         print("time:{}".format(time))
         flowStart = time
-        flowEnd = min(time + windowSize, TIME_MAX) 
+        flowEnd = min(time + windowSize, TIME_MAX + 1) 
         cmlFlow_arr[time] = cumulate(flow_arr[flowStart : flowEnd])
     return cmlFlow_arr
     
