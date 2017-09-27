@@ -96,3 +96,8 @@ def read_config_cumulative(configFilepath):
     videoFilepath = config["CUMULATIVE"]["VIDEO_FILEPATH"]
 
     return  page, windowSize, dumpFilepath, videoFilepath
+
+def get_angleThresh(configFilepath):
+    config = set_config(configFilepath)
+    angleThresh = config["STABIRIZE"]["ANGLE_THRESH"]
+    return angleThresh
