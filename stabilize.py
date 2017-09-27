@@ -42,7 +42,7 @@ def calc_fix_direction(angleThresh):
         """
         The threshold is determined by the Otus algorithm
         """
-        ret, binaryImg = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, binaryImg = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         return binaryImg
 
     def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
