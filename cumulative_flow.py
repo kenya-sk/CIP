@@ -37,13 +37,13 @@ def calc_stabilized_flows(fixDirection_arr):
         flow = ciputil.calc_dense_flow(prevStabImg, nextStabImg)
         
         prevMask = np.zeros((960, 960, 2))
-        prevFixDirectionX = int(fixDirection_arr[PAGE][time][0])
-        prevFixDirectionY = int(fixDirection_arr[PAGE][time][1])
-        prevMask[240 + prevFixDirectionX : 720 + prevFixDirectionX, 240 + prevFixDirectionY : 720 + prevFixDirectionY] = [1,1]
+        prevFixDirectionY = int(fixDirection_arr[PAGE][time][0])
+        prevFixDirectionX = int(fixDirection_arr[PAGE][time][1])
+        prevMask[240 - prevFixDirectionX : 720 - prevFixDirectionX, 240 - prevFixDirectionY : 720 - prevFixDirectionY] = [1,1]
         nextMask = np.zeros((960, 960, 2))
-        nextFixDirectionX = int(fixDirection_arr[PAGE][time + 1][0])
-        nextFixDirectionY = int(fixDirection_arr[PAGE][time + 1][1])
-        nextMask[240 + nextFixDirectionX : 720 + nextFixDirectionX, 240 + nextFixDirectionY : 720 + nextFixDirectionY] = [1,1]
+        nextFixDirectionY = int(fixDirection_arr[PAGE][time + 1][0])
+        nextFixDirectionX = int(fixDirection_arr[PAGE][time + 1][1])
+        nextMask[240 - nextFixDirectionX : 720 - nextFixDirectionX, 240 - nextFixDirectionY : 720 - nextFixDirectionY] = [1,1]
         mask = prevMask * nextMask
 
         maskedFlow = flow * mask
