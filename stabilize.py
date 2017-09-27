@@ -38,9 +38,10 @@ def calc_fix_direction():
         return prevFeatureFiltered, nextFeatureFiltered
 
     def get_binarization(gray):
-        thresh = 60
-        max_pixcel = 255
-        ret, binaryImg = cv2.threshold(gray, thresh, max_pixcel, cv2.THRESH_BINARY)
+		"""
+		The threshold is determined by the Otus algorithm
+		"""
+        ret, binaryImg = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         return binaryImg
 
     def calc_sparseFlow(prevFeatureFiltered, nextFeatureFiltered):
