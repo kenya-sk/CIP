@@ -104,3 +104,9 @@ def read_config_fixDirection(configFilepath):
     dumpFilepath = config["FIXDIRECTION"]["DUMP_FILEPATH"]
 
     return dumpFilepath
+
+def get_angleThresh(configFilepath):
+    config = set_config(configFilepath)
+    angleThresh = config["STABILIZE"]["ANGLE_THRESH"]
+
+    return angleThresh
