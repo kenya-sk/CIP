@@ -36,7 +36,7 @@ def calc_stabilized_flows(fixDirection_arr):
         nextStabImg = ciputil.get_stabilized_image(nextImg, fixDirection_arr[PAGE][time])
         flow = ciputil.calc_dense_flow(prevStabImg, nextStabImg)
         flow_arr[time] = flow
-        prevStabImg = nextStabImg   
+        prevStabImg = nextStabImg
     return flow_arr
 def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
     """
@@ -68,7 +68,7 @@ def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
                 cmlFlow[x][y][0] = i - x
                 cmlFlow[x][y][1] = j - y
         return cmlFlow
-    
+
     assert flow_arr.shape == (TIME_MAX + 1, 960, 960, 2)
     assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2)))
     assert np.array_equal(flow_arr[1], np.zeros((960, 960, 2)))
@@ -92,33 +92,33 @@ def output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath):
         stabImg = ciputil.get_stabilized_image(img, fixDirection_arr[PAGE][time])
         if time < TIME_MAX:
             flowImg = ciputil.draw_dense_flow(stabImg, cmlFlow_arr[time])
-        else: 
+        else:
             flowImg = stabImg
         video.write(flowImg)
     video.release()
-    
+
 def main():
     global TIME_MAX
     global PAGE
-    
+
     configFilepath = "./config/config.ini"
     TIME_MAX, _, outputVideo = ciputil.read_config(configFilepath)
     PAGE, windowSize, dumpFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
 
-    fixDirectionFilepath = ciputil.read_config_fixDirection(configFilepath)
+    _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
     fixDirection_arr=np.load(fixDirectionFilepath)
-    
+
     print("START: calculate stabilized dense flows")
     flow_arr = calc_stabilized_flows(fixDirection_arr)
-    
+
     print("START: cumulating flows, windowSize = {}".format(windowSize))
     cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr)
     np.save(dumpFilepath, cmlFlow_arr)
     print("DONE: dump to {}".format(dumpFilepath))
-    
+
     if outputVideo:
         print("START: output video to {}".format(videoFilepath))
-        output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath)   
+        output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath)
 
 if __name__=="__main__":
     main()
