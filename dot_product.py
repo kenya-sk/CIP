@@ -48,7 +48,7 @@ def calc_dot_product(cmlFlow_arr, windowSize, flowThreshold):
         flow[np.sum(flow*flow, axis=2) < flowThreshold]=[0,0]
         flowMargin = np.zeros((widthMargin, widthMargin, 2))
         flowMargin[margin:-margin, margin:-margin] = flow
-        
+
         neighborNum = ((margin + 1)*(margin*2 + 1) - 1)*2 #((num of xShift) * (num of yShift) - (0,0)) * (reverse direction)
         dotProductNeighbor = np.zeros ((neighborNum, widthMargin, widthMargin))
         shiftIterator = 0
@@ -65,7 +65,7 @@ def calc_dot_product(cmlFlow_arr, windowSize, flowThreshold):
 
         dotProduct = np.min(dotProductNeighbor, axis=0)
         return dotProduct[margin:-margin,margin:-margin]
-    
+
     dotProduct_arr = np.zeros((TIME_MAX + 1, 960, 960))
     for time in range(2, TIME_MAX + 1):
         cmlFlow = cmlFlow_arr[time]
@@ -85,7 +85,7 @@ def output_dot_video(dotProduct_arr, dotProductThreshold, fixDirection_arr, vide
         img = ciputil.get_image(time=time, page=PAGE)
         stabImg = ciputil.get_stabilized_image(img, fixDirection_arr[PAGE][time])
 
-        divisionPoint_arr = np.where(dotProduct_arr[time] < dotProductThreshold)
+        divisionPoint_arr = np.array(np.array(np.where(dotProduct_arr[time] < dotProductThreshold)))
 
         dotImg = stabImg
         assert divisionPoint_arr.shape[0] == 2
