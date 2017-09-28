@@ -85,7 +85,7 @@ def calc_fix_direction(angleThresh):
             prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
             flowMask = get_binarization(prevGray)
-            prevFeature = cv2.goodFegit aturesToTrack(prevGray, mask=flowMask, **feature_params)
+            prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=flowMask, **feature_params)
             try:
                 prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
                 if prevFeatureFiltered.shape[0] <= 50:
@@ -128,25 +128,15 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
     for page in range(pageFirst, pageLast + 1):
         for time in range(1, TIME_MAX + 1):
             img = ciputil.get_image(time=time, page=page)
-            fixImg = np.zeros((960, 960, 3), np.uint8)
-            height, width = img.shape[:2]
-            fixHeight, fixWidth = fixImg.shape[:2]
-
-            fixDirectionX = int(fixDirection_arr[page][time][0])
-            fixDirectionY = int(fixDirection_arr[page][time][1])
-            fixDirectionZ = int(fixDirection_arr[page][time][2])
-
-            fixImg[int((fixHeight - height) / 2) - fixDirectionY:
-                   int(height + (fixHeight - height) / 2) - fixDirectionY,
-                   int((fixWidth - width) / 2) - fixDirectionX:
-                   int(width + (fixWidth - width) / 2) - fixDirectionX] = img
+            fixImg = get_stabilized_image(img, fixDirection_arr)
 
             text = '[{0:03d},{1:03d},{2:03d}]'.format(fixDirectionX, fixDirectionY,fixDirectionZ)
-            cv2.putText(fixImg, text, (fixWidth - 300, fixHeight - 25),
+            cv2.putText(fixImg, text, (660, 935),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
             data = "[page: {0:03d} time: {1:03d}]".format(page, time)
-            cv2.putText(fixImg, data, (fixWidth - 800, fixHeight - 25),
+            cv2.putText(fixImg, data, (160, 935),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
+
             video.write(fixImg)
         for _ in range(10):
             video.write(waitImg)
