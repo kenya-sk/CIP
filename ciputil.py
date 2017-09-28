@@ -75,6 +75,10 @@ def get_stabilized_image(img, fixDirection):
            int(height + (fixHeight - height) / 2) - fixDirectionY,
            int((fixWidth - width) / 2) - fixDirectionX:
            int(width + (fixWidth - width) / 2) - fixDirectionX] = img
+
+    text = '[{0:03d},{1:03d},{2:03d}]'.format(fixDirectionX, fixDirectionY,fixDirectionZ)
+    cv2.putText(fixImg, text, (660, 935),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
     return fixImg
 
 def draw_dense_flow(img, flow, step=8):

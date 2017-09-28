@@ -127,11 +127,8 @@ def output_stabilized_video(fixDirection_arr, videoFilepath, configFilepath):
     for page in range(pageFirst, pageLast + 1):
         for time in range(1, TIME_MAX + 1):
             img = ciputil.get_image(time=time, page=page)
-            fixImg = get_stabilized_image(img, fixDirection_arr)
+            fixImg = ciputil.get_stabilized_image(img, fixDirection_arr[page][time])
 
-            text = '[{0:03d},{1:03d},{2:03d}]'.format(fixDirectionX, fixDirectionY,fixDirectionZ)
-            cv2.putText(fixImg, text, (660, 935),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
             data = "[page: {0:03d} time: {1:03d}]".format(page, time)
             cv2.putText(fixImg, data, (160, 935),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
