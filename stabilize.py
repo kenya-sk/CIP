@@ -105,14 +105,13 @@ def calc_fix_direction(angleThresh):
     return fixDirection_arr
 
 
-def output_stabilized_video(fixDirection_arr, configFilepath):
+def output_stabilized_video(fixDirection_arr, videoFilepath, configFilepath):
     """
     output stabilized video according to fixDirection_arr
     """
 
     config = ConfigParser()
     config.read(configFilepath)
-    videoFilepath = config["VIDEO"]["VIDEO_FILEPATH"]
     if config["VIDEO"]["PAGE"] == "ALL":
         pageFirst = 1
         pageLast = PAGE_MAX
@@ -162,14 +161,14 @@ def main():
 
     configFilepath = "./config/config.ini"
     TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
-    dumpFilepath = ciputil.read_config_fixDirection(configFilepath)
+    _, dumpFilepath, videoFilepath = ciputil.read_config_stabilize(configFilepath)
     angleThresh = ciputil.get_angleThresh(configFilepath)
     fixDirection_arr = calc_fix_direction(angleThresh)
     np.save(dumpFilepath, fixDirection_arr)
     print("DONE:  calcurate fix direction")
 
     if OUTPUT_VIDEO:
-        output_stabilized_video(fixDirection_arr, configFilepath)
+        output_stabilized_video(fixDirection_arr, videoFilepath, configFilepath)
 
 
 if __name__ == "__main__":

@@ -94,11 +94,13 @@ def read_config_cumulative(configFilepath):
 
     return  page, windowSize, dumpFilepath, videoFilepath
 
-def read_config_fixDirection(configFilepath):
+def read_config_stabilize(configFilepath):
     config = set_config(configFilepath)
-    dumpFilepath = config["FIXDIRECTION"]["DUMP_FILEPATH"]
+    angleThresh = config["STABILIZE"]["ANGLE_THRESH"]
+    dumpFilepath = config["STABILIZE"]["DUMP_FILEPATH"]
+    videoFilepath = config["STABILIZE"]["VIDEO_FILEPATH"]
 
-    return dumpFilepath
+    return angleThresh, dumpFilepath, videoFilepath
 
 def read_config_dot(configFilepath):
     config = set_config(configFilepath)
