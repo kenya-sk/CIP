@@ -63,6 +63,9 @@ def get_stabilized_image(img, fixDirection):
     fixImg = np.zeros((960, 960, 3), np.uint8)
     height, width = img.shape[:2]
     fixHeight, fixWidth = fixImg.shape[:2]
+    #rounding of image movement by image size
+    fixDirection_arr[fixDirection_arr > 240] = 240
+    fixDirection_arr[fixDirection_arr < -240] = -240
 
     fixDirectionX = int(fixDirection[0])
     fixDirectionY = int(fixDirection[1])
