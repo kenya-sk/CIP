@@ -125,6 +125,9 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
     fourcc = int(cv2.VideoWriter_fourcc(*'avc1'))
     video = cv2.VideoWriter(videoFilepath, fourcc, 5.0, (960, 960))
     waitImg = np.zeros((960, 960, 3), np.uint8)  # image for waiting
+    #around image movement
+    fixDirection_arr[fixDirection_arr > 240] = 240
+    fixDirection_arr[fixDirection_arr < -240] = -240
 
     for page in range(pageFirst, pageLast + 1):
         for time in range(1, TIME_MAX + 1):
@@ -133,9 +136,11 @@ def output_stabilized_video(fixDirection_arr, configFilepath):
             height, width = img.shape[:2]
             fixHeight, fixWidth = fixImg.shape[:2]
 
+
             fixDirectionX = int(fixDirection_arr[page][time][0])
             fixDirectionY = int(fixDirection_arr[page][time][1])
             fixDirectionZ = int(fixDirection_arr[page][time][2])
+
 
             fixImg[int((fixHeight - height) / 2) - fixDirectionY:
                    int(height + (fixHeight - height) / 2) - fixDirectionY,
