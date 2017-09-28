@@ -148,8 +148,7 @@ def main():
 
     configFilepath = "./config/config.ini"
     TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
-    _, dumpFilepath, videoFilepath = ciputil.read_config_stabilize(configFilepath)
-    angleThresh = ciputil.get_angleThresh(configFilepath)
+    angleThresh, dumpFilepath, videoFilepath = ciputil.read_config_stabilize(configFilepath)
     fixDirection_arr = calc_fix_direction(angleThresh)
     np.save(dumpFilepath, fixDirection_arr)
     print("DONE:  calcurate fix direction")

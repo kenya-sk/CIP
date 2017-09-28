@@ -103,7 +103,7 @@ def read_config_cumulative(configFilepath):
 
 def read_config_stabilize(configFilepath):
     config = set_config(configFilepath)
-    angleThresh = config["STABILIZE"]["ANGLE_THRESH"]
+    angleThresh = int(config["STABILIZE"]["ANGLE_THRESH"])
     dumpFilepath = config["STABILIZE"]["DUMP_FILEPATH"]
     videoFilepath = config["STABILIZE"]["VIDEO_FILEPATH"]
 
