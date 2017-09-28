@@ -35,26 +35,25 @@ def calc_stabilized_flows(fixDirection_arr):
         nextImg = ciputil.get_image(time=time, page=PAGE)
         nextStabImg = ciputil.get_stabilized_image(nextImg, fixDirection_arr[PAGE][time])
         flow = ciputil.calc_dense_flow(prevStabImg, nextStabImg)
-        
-        prevMask = np.zeros((960, 960, 2))
-        prevFixDirectionY = int(fixDirection_arr[PAGE][time - 1][0])
-        prevFixDirectionX = int(fixDirection_arr[PAGE][time - 1][1])
-        prevMask[240 - prevFixDirectionX : 720 - prevFixDirectionX, 240 - prevFixDirectionY : 720 - prevFixDirectionY] = [1,1]
-        nextMask = np.zeros((960, 960, 2))
-        nextFixDirectionY = int(fixDirection_arr[PAGE][time][0])
-        nextFixDirectionX = int(fixDirection_arr[PAGE][time][1])
-        nextMask[240 - nextFixDirectionX : 720 - nextFixDirectionX, 240 - nextFixDirectionY : 720 - nextFixDirectionY] = [1,1]
-        mask = prevMask * nextMask
-
-        maskedFlow = flow * mask
-        flow_arr[time] = maskedFlow
+        flow_arr[time] = flow
         prevStabImg = nextStabImg   
     return flow_arr
-
-def calc_cumulative_flows(flow_arr, windowSize):
+def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
     """
     return cmlFlow_arr[time+1][960][960][2], 1 origin time
     """
+    def make_mask(fixDirection_arr):
+        """
+        return mask_arr[time+1][960][960][2], 1 origin time
+        """
+        mask_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
+
+        for time in range(TIME_MAX + 1):
+            fixDirectionY = int(fixDirection_arr[PAGE][time][0])
+            fixDirectionX = int(fixDirection_arr[PAGE][time][1])
+            mask_arr[time][420 - fixDirectionX : 540 - fixDirectionX, 420 - fixDirectionY : 540 - fixDirectionY] = [1,1]
+        return mask_arr
+
     def cumulate(flow_arr):
         cmlFlow = np.zeros((960, 960, 2))
         for x in range(960):
@@ -73,15 +72,17 @@ def calc_cumulative_flows(flow_arr, windowSize):
     assert flow_arr.shape == (TIME_MAX + 1, 960, 960, 2)
     assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2)))
     assert np.array_equal(flow_arr[1], np.zeros((960, 960, 2)))
-    
+
+    mask_arr = make_mask(fixDirection_arr)
     cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
     for time in range(2, TIME_MAX + 1):
         print("time:{}".format(time))
         flowStart = time
-        flowEnd = min(time + windowSize, TIME_MAX + 1) 
-        cmlFlow_arr[time] = cumulate(flow_arr[flowStart : flowEnd])
+        flowEnd = min(time + windowSize, TIME_MAX + 1)
+        mask = np.prod(mask_arr[flowStart : flowEnd], axis=0)
+        cmlFlow_arr[time] = cumulate(flow_arr[flowStart : flowEnd]) * mask        
     return cmlFlow_arr
-    
+
 def output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath):
     fourcc = int(cv2.VideoWriter_fourcc(*'avc1'))
     video = cv2.VideoWriter(videoFilepath, fourcc, 5.0, (960, 960))
@@ -111,7 +112,7 @@ def main():
     flow_arr = calc_stabilized_flows(fixDirection_arr)
     
     print("START: cumulating flows, windowSize = {}".format(windowSize))
-    cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize = windowSize)
+    cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr)
     np.save(dumpFilepath, cmlFlow_arr)
     print("DONE: dump to {}".format(dumpFilepath))
     
