@@ -63,16 +63,23 @@ def calc_fix_direction(angleThresh):
         return movement
 
     def calc_angle_variance(sparseFlow):
+        sparseFlow[sparseFlow <= 10] = 0
         sparseFlowX = sparseFlow[:, 0]
         sparseFlowY = sparseFlow[:, 1]
         angle_arr = np.arctan2(sparseFlowX, sparseFlowY) * 180 / np.pi
         angleVar = np.var(angle_arr)
         return angleVar
 
+    def normalized_variance(angleVar_arr):
+        varMax = np.amax(angleVar_arr)
+        normAngleVar_arr = angleVar_arr / varMax
+        return normAngleVar_arr
+
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
     latestMovement = np.array([0, 0, 0])
     angleVar_arr = np.zeros((PAGE_MAX+1, TIME_MAX+1))
+    normAngleVar_arr = np.zeros((PAGE_MAX+1, TIME_MAX+1))
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
@@ -102,6 +109,10 @@ def calc_fix_direction(angleThresh):
                 movement = latestMovement
             for i in range(3):
                 fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
+    normAngleVar_arr = normalized_variance(angleVar_arr)
+    for i in range(PAGE_MAX+1):
+        plt.plot(normAngleVar_arr[i, :])
+    plt.savefig("varLevel5.png")
     return fixDirection_arr
 
 
