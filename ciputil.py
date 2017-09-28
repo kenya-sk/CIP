@@ -63,6 +63,9 @@ def get_stabilized_image(img, fixDirection):
     fixImg = np.zeros((960, 960, 3), np.uint8)
     height, width = img.shape[:2]
     fixHeight, fixWidth = fixImg.shape[:2]
+    #rounding of image movement by image size
+    fixDirection_arr[fixDirection_arr > 240] = 240
+    fixDirection_arr[fixDirection_arr < -240] = -240
 
     fixDirectionX = int(fixDirection[0])
     fixDirectionY = int(fixDirection[1])
@@ -94,11 +97,13 @@ def read_config_cumulative(configFilepath):
 
     return  page, windowSize, dumpFilepath, videoFilepath
 
-def read_config_fixDirection(configFilepath):
+def read_config_stabilize(configFilepath):
     config = set_config(configFilepath)
-    dumpFilepath = config["FIXDIRECTION"]["DUMP_FILEPATH"]
+    angleThresh = config["STABILIZE"]["ANGLE_THRESH"]
+    dumpFilepath = config["STABILIZE"]["DUMP_FILEPATH"]
+    videoFilepath = config["STABILIZE"]["VIDEO_FILEPATH"]
 
-    return dumpFilepath
+    return angleThresh, dumpFilepath, videoFilepath
 
 def read_config_dot(configFilepath):
     config = set_config(configFilepath)

@@ -118,7 +118,7 @@ def main():
         print("DONE: load dot product array from {}".format(dumpFilepath))
 
     if OUTPUT_VIDEO:
-        fixDirectionFilepath=ciputil.read_config_fixDirection(configFilepath)
+        _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
         fixDirection_arr = np.load(fixDirectionFilepath)
         output_dot_video(dotProduct_arr, dotThreshold, fixDirection_arr,videoFilepath)
         print("DONE: output video to {}".format(videoFilepath))
