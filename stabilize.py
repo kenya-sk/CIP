@@ -85,7 +85,7 @@ def calc_fix_direction(angleThresh):
             prevGray = cv2.cvtColor(prevImg, cv2.COLOR_BGR2GRAY)
             nextImg = ciputil.get_image(time=time, page=page)
             flowMask = get_binarization(prevGray)
-            prevFeature = cv2.goodFegit aturesToTrack(prevGray, mask=flowMask, **feature_params)
+            prevFeature = cv2.goodFeaturesToTrack(prevGray, mask=flowMask, **feature_params)
             try:
                 prevFeatureFiltered, nextFeatureFiltered = get_feature(prevImg, nextImg, prevFeature)
                 if prevFeatureFiltered.shape[0] <= 50:
