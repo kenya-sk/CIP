@@ -38,6 +38,7 @@ def calc_stabilized_flows(fixDirection_arr):
         flow_arr[time] = flow
         prevStabImg = nextStabImg
     return flow_arr
+
 def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
     """
     return cmlFlow_arr[time+1][960][960][2], 1 origin time
@@ -83,6 +84,63 @@ def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
         cmlFlow_arr[time] = cumulate(flow_arr[flowStart : flowEnd]) * mask
     return cmlFlow_arr
 
+def calc_cumulative_flows_fast(flow_arr, windowSize):
+    """
+    return cmlFlow_arr[time+1][960][960][2], 1 origin time
+    """
+    
+    def cumulate(flow_arr, mask):
+        """
+        calculate only if mask pixcel == True, otherwise return (0,0)
+        """
+        assert mask.shape == (960, 960)
+        
+        cmlFlow = np.zeros((960, 960, 2))
+        for x in range(960):
+            for y in range(960):
+                if mask[x][y]:
+                    i = x
+                    j = y
+                    for flow in flow_arr:
+                        assert flow.shape == (960, 960, 2)
+                        ni = i + flow[int(i)][int(j)][0]
+                        nj = j + flow[int(i)][int(j)][1]
+                        i, j = ni, nj
+                    cmlFlow[x][y][0] = i - x
+                    cmlFlow[x][y][1] = j - y
+        return cmlFlow
+
+    assert flow_arr.shape == (TIME_MAX + 1, 960, 960, 2)
+    assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2)))
+    assert np.array_equal(flow_arr[1], np.zeros((960, 960, 2)))
+
+    cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
+    needCalc = np.ones((960,960)).astype(bool)
+    cmlFlow_arr[2] = cumulate(flow_arr[2 : min(2+windowSize, TIME_MAX + 1)], needCalc) #initialization with time=2
+    
+    for time in range(2, TIME_MAX):
+        print("calc time:{} from time:{}".format(time+1, time))
+        a = cmlFlow_arr[time]-flow_arr[time] #subtraction
+        assert a.shape == (960, 960, 2)
+        needCalc= np.ones((960, 960)).astype(bool)
+        for x in range(960):
+            for y in range(960):
+                """
+                time: (x, y) -> time+1: (i, j) -> time+windowSize: (m, n)
+                """
+                i = x + int(flow_arr[time][x][y][0])
+                j = y + int(flow_arr[time][x][y][1])
+                m = i + int(a[x][y][0])
+                n = j + int(a[x][y][1])
+               
+                cmlFlow_arr[time+1][i][j] = a[x][y] #adjust to new coordinate
+                if (time+windowSize <= TIME_MAX):
+                    cmlFlow_arr[time+1][i][j] += flow_arr[time+windowSize][m][n] #addtion
+                needCalc[i][j]=False
+        print("\tcalculating {} pixcels".format(np.sum(needCalc)))
+        cmlFlow_arr[time+1]+=cumulate(flow_arr[time+1:min(time+1+windowSize, TIME_MAX+1)], needCalc)
+    return cmlFlow_arr
+
 def output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath):
     fourcc = int(cv2.VideoWriter_fourcc(*'avc1'))
     video = cv2.VideoWriter(videoFilepath, fourcc, 5.0, (960, 960))
@@ -112,7 +170,9 @@ def main():
     flow_arr = calc_stabilized_flows(fixDirection_arr)
 
     print("START: cumulating flows, windowSize = {}".format(windowSize))
-    cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr)
+    #cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr)
+    cmlFlow_arr = calc_cumulative_flows_fast(flow_arr, windowSize)
+    
     np.save(dumpFilepath, cmlFlow_arr)
     print("DONE: dump to {}".format(dumpFilepath))
 
