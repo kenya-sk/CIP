@@ -51,7 +51,7 @@ def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
         for time in range(TIME_MAX + 1):
             fixDirectionY = int(fixDirection_arr[PAGE][time][0])
             fixDirectionX = int(fixDirection_arr[PAGE][time][1])
-            mask_arr[time][420 - fixDirectionX : 540 - fixDirectionX, 420 - fixDirectionY : 540 - fixDirectionY] = [1,1]
+            mask_arr[time][240 - fixDirectionX : 720 - fixDirectionX, 240 - fixDirectionY : 720 - fixDirectionY] = [1,1]
         return mask_arr
 
     def cumulate(flow_arr):
