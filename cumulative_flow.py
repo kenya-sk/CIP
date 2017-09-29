@@ -15,6 +15,7 @@ import numpy as np
 import sys
 from matplotlib import pyplot as plt
 import cv2
+import time
 
 import ciputil
 
@@ -84,62 +85,77 @@ def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
         cmlFlow_arr[time] = cumulate(flow_arr[flowStart : flowEnd]) * mask
     return cmlFlow_arr
 
-def calc_cumulative_flows_fast(flow_arr, windowSize):
+def calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr):
     """
     return cmlFlow_arr[time+1][960][960][2], 1 origin time
     """
-    
-    def cumulate(flow_arr, mask):
+    def make_mask(fixDirection_arr):
         """
-        calculate only if mask pixcel == True, otherwise return (0,0)
+        return mask_arr[time+1][960][960][2], 1 origin time
         """
-        assert mask.shape == (960, 960)
-        
+        mask_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
+
+        for time in range(TIME_MAX + 1):
+            fixDirectionX = int(fixDirection_arr[PAGE][time][0])
+            fixDirectionY = int(fixDirection_arr[PAGE][time][1])
+            mask_arr[time][300 - fixDirectionY : 660 - fixDirectionY, 300 - fixDirectionX : 660 - fixDirectionX] = [1,1]
+        return mask_arr
+
+    def cumulate(flow_arr, mask_arr):
         cmlFlow = np.zeros((960, 960, 2))
-        for x in range(960):
-            for y in range(960):
-                if mask[x][y]:
-                    i = x
-                    j = y
-                    for flow in flow_arr:
-                        assert flow.shape == (960, 960, 2)
-                        ni = i + flow[int(i)][int(j)][0]
-                        nj = j + flow[int(i)][int(j)][1]
-                        i, j = ni, nj
-                    cmlFlow[x][y][0] = i - x
-                    cmlFlow[x][y][1] = j - y
+        maskedX_arr = np.where(mask_arr[time] != 0)[0]
+        maskedY_arr = np.where(mask_arr[time] != 0)[1]
+        for n in range(len(maskedX_arr)):
+            x = maskedX_arr[n]
+            y = maskedY_arr[n]
+            i = x
+            j = y
+            for flow in flow_arr:
+                assert flow.shape == (960, 960, 2)
+                ni = i + flow[int(i)][int(j)][0]
+                nj = j + flow[int(i)][int(j)][1]
+                i, j = ni, nj
+            cmlFlow[x][y][0] = i - x
+            cmlFlow[x][y][1] = j - y
         return cmlFlow
 
     assert flow_arr.shape == (TIME_MAX + 1, 960, 960, 2)
     assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2)))
     assert np.array_equal(flow_arr[1], np.zeros((960, 960, 2)))
 
+    mask_arr = make_mask(fixDirection_arr)
     cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
-    needCalc = np.ones((960,960)).astype(bool)
-    cmlFlow_arr[2] = cumulate(flow_arr[2 : min(2+windowSize, TIME_MAX + 1)], needCalc) #initialization with time=2
+    cmlFlow_arr[1] = cumulate(flow_arr[2 : min(2+windowSize, TIME_MAX + 1)]) * np.prod(mask_arr[2 : min(2+windowSize, TIME_MAX + 1)], axis=0) #initialization with time=1
     
     for time in range(2, TIME_MAX):
-        print("calc time:{} from time:{}".format(time+1, time))
-        a = cmlFlow_arr[time]-flow_arr[time] #subtraction
+        print("calc time:{}".format(time))
+        a = cmlFlow_arr[time - 1]-flow_arr[time] #subtraction
         assert a.shape == (960, 960, 2)
-        needCalc= np.ones((960, 960)).astype(bool)
-        for x in range(960):
-            for y in range(960):
-                """
-                time: (x, y) -> time+1: (i, j) -> time+windowSize: (m, n)
-                """
-                i = x + int(flow_arr[time][x][y][0])
-                j = y + int(flow_arr[time][x][y][1])
-                m = i + int(a[x][y][0])
-                n = j + int(a[x][y][1])
-               
-                cmlFlow_arr[time+1][i][j] = a[x][y] #adjust to new coordinate
-                if (time+windowSize <= TIME_MAX):
-                    cmlFlow_arr[time+1][i][j] += flow_arr[time+windowSize][m][n] #addtion
-                needCalc[i][j]=False
-        print("\tcalculating {} pixcels".format(np.sum(needCalc)))
-        cmlFlow_arr[time+1]+=cumulate(flow_arr[time+1:min(time+1+windowSize, TIME_MAX+1)], needCalc)
+        b = np.zeros((960, 960, 2))
+        
+        maskedX_arr = np.where(mask_arr[time] != 0)[0]
+        maskedY_arr = np.where(mask_arr[time] != 0)[1]
+        for maskIterator in range(len(maskedX_arr)):
+            x = maskedX_arr[maskIterator]
+            y = maskedY_arr[maskIterator]
+            """
+            b: cml flow of (time + 1 ~ time+windowSize)
+            """
+            i = x + int(flow_arr[time][x][y][0])
+            j = y + int(flow_arr[time][x][y][1])
+            if 0 <= i < 960 and 0 <= j < 960:
+                b[i][j] = a[x][y]
+                bi = i + int(b[i][j][0])
+                bj = j + int(b[i][j][1])
+                if time + windowSize <= TIME_MAX:
+                    ni = bi + flow_arr[time + windowSize][bi][bj][0]
+                    nj = bj + flow_arr[time + windowSize][bi][bj][1]
+                else:
+                    ni = bi
+                    nj = bj
+            cmlFlow_arr[time][i][j] = [ni - i, nj - j] * np.prod(mask_arr[time + 1 : min(time + windowSize, TIME_MAX + 1), i, j], axis=0)
     return cmlFlow_arr
+
 
 def output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath):
     fourcc = int(cv2.VideoWriter_fourcc(*'avc1'))
@@ -171,7 +187,7 @@ def main():
 
     print("START: cumulating flows, windowSize = {}".format(windowSize))
     #cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr)
-    cmlFlow_arr = calc_cumulative_flows_fast(flow_arr, windowSize)
+    cmlFlow_arr = calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr)
     
     np.save(dumpFilepath, cmlFlow_arr)
     print("DONE: dump to {}".format(dumpFilepath))
@@ -181,4 +197,7 @@ def main():
         output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath)
 
 if __name__=="__main__":
+    start = time.time()
     main()
+    elapse = time.time() - start
+    print('\nelapse time: {}  sec'.format(elapse))
