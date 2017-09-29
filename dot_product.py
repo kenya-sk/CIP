@@ -68,6 +68,7 @@ def calc_dot_product(cmlFlow_arr, windowSize, flowThreshold):
 
     dotProduct_arr = np.zeros((TIME_MAX + 1, 960, 960))
     for time in range(2, TIME_MAX + 1):
+        print(time)
         cmlFlow = cmlFlow_arr[time]
         dotProduct_arr[time] = dot_product(cmlFlow, windowSize, flowThreshold)
     return dotProduct_arr
@@ -108,20 +109,27 @@ def main():
     cmlFlow_arr = np.load(cmlFlowFilepath)
     recalculate, windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
-    if recalculate:
-        print("START: calculating dot product")
-        dotProduct_arr = calc_dot_product(cmlFlow_arr, windowSize, flowThreshold)
-        np.save(dumpFilepath, dotProduct_arr)
-        print("DONE: dump to {}".format(dumpFilepath))
-    else:
-        dotProduct_arr = np.load(dumpFilepath)
-        print("DONE: load dot product array from {}".format(dumpFilepath))
+    for page in range(30, 31):
+        PAGE = page
+        
+        if recalculate:
+            print("START: calculating dot product")
+            cmlFlowFilepath = "./out/cml_{}.npy".format(page)
+            cmlFlow_arr = np.load(cmlFlowFilepath)
+            dotProduct_arr = calc_dot_product(cmlFlow_arr, windowSize, flowThreshold)
+            dumpFilepath = "./out/dot_{}.npy".format(page)
+            np.save(dumpFilepath, dotProduct_arr)
+            print("DONE: dump to {}".format(dumpFilepath))
+        else:
+            dotProduct_arr = np.load(dumpFilepath)
+            print("DONE: load dot product array from {}".format(dumpFilepath))
 
-    if OUTPUT_VIDEO:
-        _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
-        fixDirection_arr = np.load(fixDirectionFilepath)
-        output_dot_video(dotProduct_arr, dotThreshold, fixDirection_arr,videoFilepath)
-        print("DONE: output video to {}".format(videoFilepath))
+        if OUTPUT_VIDEO:
+            _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
+            fixDirection_arr = np.load(fixDirectionFilepath)
+            videoFilepath = "./out/dot_{}.mp4".format(page)
+            output_dot_video(dotProduct_arr, dotThreshold, fixDirection_arr,videoFilepath)
+            print("DONE: output video to {}".format(videoFilepath))
 
 if __name__ == "__main__":
     start = time.time()
