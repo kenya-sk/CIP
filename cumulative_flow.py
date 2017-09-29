@@ -38,11 +38,22 @@ def calc_stabilized_flows(fixDirection_arr):
         flow_arr[time] = flow
         prevStabImg = nextStabImg
     return flow_arr
-
-def calc_cumulative_flows(flow_arr, windowSize):
+def calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr):
     """
     return cmlFlow_arr[time+1][960][960][2], 1 origin time
     """
+    def make_mask(fixDirection_arr):
+        """
+        return mask_arr[time+1][960][960][2], 1 origin time
+        """
+        mask_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
+
+        for time in range(TIME_MAX + 1):
+            fixDirectionX = int(fixDirection_arr[PAGE][time][0])
+            fixDirectionY = int(fixDirection_arr[PAGE][time][1])
+            mask_arr[time][300 - fixDirectionY : 660 - fixDirectionY, 300 - fixDirectionX : 660 - fixDirectionX] = [1,1]
+        return mask_arr
+
     def cumulate(flow_arr):
         cmlFlow = np.zeros((960, 960, 2))
         for x in range(960):
@@ -62,12 +73,14 @@ def calc_cumulative_flows(flow_arr, windowSize):
     assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2)))
     assert np.array_equal(flow_arr[1], np.zeros((960, 960, 2)))
 
+    mask_arr = make_mask(fixDirection_arr)
     cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
     for time in range(2, TIME_MAX + 1):
         print("time:{}".format(time))
         flowStart = time
         flowEnd = min(time + windowSize, TIME_MAX + 1)
-        cmlFlow_arr[time] = cumulate(flow_arr[flowStart : flowEnd])
+        mask = np.prod(mask_arr[flowStart : flowEnd], axis=0)
+        cmlFlow_arr[time] = cumulate(flow_arr[flowStart : flowEnd]) * mask
     return cmlFlow_arr
 
 def output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath):
@@ -99,7 +112,7 @@ def main():
     flow_arr = calc_stabilized_flows(fixDirection_arr)
 
     print("START: cumulating flows, windowSize = {}".format(windowSize))
-    cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize = windowSize)
+    cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr)
     np.save(dumpFilepath, cmlFlow_arr)
     print("DONE: dump to {}".format(dumpFilepath))
 
