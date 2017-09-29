@@ -63,23 +63,28 @@ def calc_fix_direction(angleThresh):
         return movement
 
     def calc_angle_variance(sparseFlow):
-        sparseFlow[sparseFlow <= 10] = 0
-        sparseFlowX = sparseFlow[:, 0]
-        sparseFlowY = sparseFlow[:, 1]
-        angle_arr = np.arctan2(sparseFlowX, sparseFlowY) * 180 / np.pi
+        filterSparseFlow = sparseFlow.copy()
+        filterSparseFlow[filterSparseFlow <= 5] = 0
+        filterSparseFlowX = filterSparseFlow[:, 0]
+        filterSparseFlowY = filterSparseFlow[:, 1]
+        angle_arr = np.arctan2(filterSparseFlowX, filterSparseFlowY) * 180 / np.pi
         angleVar = np.var(angle_arr)
         return angleVar
 
     def normalized_variance(angleVar_arr):
         varMax = np.amax(angleVar_arr)
-        normAngleVar_arr = angleVar_arr / varMax
+        if varMax != 0:
+            normAngleVar_arr = angleVar_arr / varMax
+        else:
+            return angleVar_arr
         return normAngleVar_arr
+
 
     fixDirection_arr = np.zeros((PAGE_MAX + 1,TIME_MAX + 1, 3))  # +1 to adjust to 1 origin of time
     allPage_fixDirection_arr = np.zeros((TIME_MAX + 1, 3))
     latestMovement = np.array([0, 0, 0])
     angleVar_arr = np.zeros((PAGE_MAX+1, TIME_MAX+1))
-    normAngleVar_arr = np.zeros((PAGE_MAX+1, TIME_MAX+1))
+    movement_arr = np.zeros((PAGE_MAX + 1, TIME_MAX + 1, 3))
 
     feature_params = dict(maxCorners = 200,
                             qualityLevel = 0.001,
@@ -101,18 +106,24 @@ def calc_fix_direction(angleThresh):
                 prevFeature = nextFeatureFiltered.reshape(-1, 1, 2)
                 angleVar = calc_angle_variance(sparseFlow)
                 angleVar_arr[page][time] = angleVar
-                if angleVar >= angleThresh:
-                    raise FeatureError("Not detect feature")
-                movement = calc_movement(sparseFlow)
-                latestMovement = movement
+                movement_arr[page][time] = calc_movement(sparseFlow)
             except FeatureError:
-                movement = latestMovement
-            for i in range(3):
-                fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement[i]
+                movement_arr[page][time] = movement_arr[page-1][time]
+
     normAngleVar_arr = normalized_variance(angleVar_arr)
+
     for i in range(PAGE_MAX+1):
         plt.plot(normAngleVar_arr[i, :])
-    plt.savefig("varLevel5.png")
+    plt.savefig("./varLevel1.png")
+    print("Done savefig")
+
+
+    for time in range(2, TIME_MAX+1):
+        for page in range(1, PAGE_MAX+1):
+            if normAngleVar_arr[page][time] >= angleThresh:
+                movement_arr[page][time] = movement_arr[page-1][time]
+            for i in range(3):
+                fixDirection_arr[page][time][i] = fixDirection_arr[page][time - 1][i] + movement_arr[page][time][i]
     return fixDirection_arr
 
 
