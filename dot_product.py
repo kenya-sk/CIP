@@ -109,7 +109,7 @@ def main():
     cmlFlow_arr = np.load(cmlFlowFilepath)
     recalculate, windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
-    for page in range(30, 31):
+    for page in range(1, PAGE_MAX+1):
         PAGE = page
         
         if recalculate:
