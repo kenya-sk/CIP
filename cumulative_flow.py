@@ -20,12 +20,14 @@ import time
 import ciputil
 
 TIME_MAX = None
+PAGE_MAX = None
 PAGE = None
 
 def calc_stabilized_flows(fixDirection_arr):
     """
     return flow_arr[time+1][960][960][2], 1 origin time
     """
+    print("start calc stabilized flow with page = {}".format(PAGE))
     flow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))#1 origin flow_arr[time] means change between (time - 1, time)
 
     prevImg = ciputil.get_image(time=1, page=PAGE)
@@ -184,7 +186,7 @@ def main():
     _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
     fixDirection_arr=np.load(fixDirectionFilepath)
 
-    for page in range(30, 35):
+    for page in range(1, PAGE_MAX+1):
         PAGE = page
         print("START: page = {}".format(page))
 
