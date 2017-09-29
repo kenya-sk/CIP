@@ -111,13 +111,6 @@ def calc_fix_direction(angleThresh):
                 movement_arr[page][time] = movement_arr[page-1][time]
 
     normAngleVar_arr = normalized_variance(angleVar_arr)
-
-    for i in range(PAGE_MAX+1):
-        plt.plot(normAngleVar_arr[i, :])
-    plt.savefig("./varLevel1.png")
-    print("Done savefig")
-
-
     for time in range(2, TIME_MAX+1):
         for page in range(1, PAGE_MAX+1):
             if normAngleVar_arr[page][time] >= angleThresh:
