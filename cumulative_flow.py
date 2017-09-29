@@ -101,10 +101,10 @@ def calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr):
             mask_arr[time][300 - fixDirectionY : 660 - fixDirectionY, 300 - fixDirectionX : 660 - fixDirectionX] = [1,1]
         return mask_arr
 
-    def cumulate(flow_arr, mask_arr):
+    def cumulate(flow_arr, mask):
         cmlFlow = np.zeros((960, 960, 2))
-        maskedX_arr = np.where(mask_arr[time] != 0)[0]
-        maskedY_arr = np.where(mask_arr[time] != 0)[1]
+        maskedX_arr = np.where(mask != 0)[0]
+        maskedY_arr = np.where(mask != 0)[1]
         for n in range(len(maskedX_arr)):
             x = maskedX_arr[n]
             y = maskedY_arr[n]
@@ -117,7 +117,7 @@ def calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr):
                 i, j = ni, nj
             cmlFlow[x][y][0] = i - x
             cmlFlow[x][y][1] = j - y
-        return cmlFlow
+        return cmlFlow * mask
 
     assert flow_arr.shape == (TIME_MAX + 1, 960, 960, 2)
     assert np.array_equal(flow_arr[0], np.zeros((960, 960, 2)))
@@ -125,7 +125,8 @@ def calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr):
 
     mask_arr = make_mask(fixDirection_arr)
     cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
-    cmlFlow_arr[1] = cumulate(flow_arr[2 : min(2+windowSize, TIME_MAX + 1)]) * np.prod(mask_arr[2 : min(2+windowSize, TIME_MAX + 1)], axis=0) #initialization with time=1
+    initMask = np.prod(mask_arr[2 : min(2 + windowSize, TIME_MAX + 1)], axis = 0)
+    cmlFlow_arr[1] = cumulate(flow_arr[2 : min(2+windowSize, TIME_MAX + 1)], initMask) #initialization with time=1
     
     for time in range(2, TIME_MAX):
         print("calc time:{}".format(time))
