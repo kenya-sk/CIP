@@ -103,7 +103,7 @@ def read_config_cumulative(configFilepath):
 
 def read_config_stabilize(configFilepath):
     config = set_config(configFilepath)
-    angleThresh = int(config["STABILIZE"]["ANGLE_THRESH"])
+    angleThresh = float(config["STABILIZE"]["ANGLE_THRESH"])
     dumpFilepath = config["STABILIZE"]["DUMP_FILEPATH"]
     videoFilepath = config["STABILIZE"]["VIDEO_FILEPATH"]
 
@@ -119,9 +119,3 @@ def read_config_dot(configFilepath):
     videoFilepath = config["DOT"]["VIDEO_FILEPATH"]
 
     return recalculate, windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath
-
-def get_angleThresh(configFilepath):
-    config = set_config(configFilepath)
-    angleThresh = int(config["STABILIZE"]["ANGLE_THRESH"])
-
-    return angleThresh
