@@ -174,28 +174,34 @@ def output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath):
 
 def main():
     global TIME_MAX
+    global PAGE_MAX
     global PAGE
 
     configFilepath = "./config/config.ini"
-    TIME_MAX, _, outputVideo = ciputil.read_config(configFilepath)
-    PAGE, windowSize, dumpFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
+    TIME_MAX, PAGE_MAX, outputVideo = ciputil.read_config(configFilepath)
+    _ ,windowSize, _, _ = ciputil.read_config_cumulative(configFilepath)
 
     _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
     fixDirection_arr=np.load(fixDirectionFilepath)
 
-    print("START: calculate stabilized dense flows")
-    flow_arr = calc_stabilized_flows(fixDirection_arr)
+    for page in range(30, 35):
+        PAGE = page
+        print("START: page = {}".format(page))
 
-    print("START: cumulating flows, windowSize = {}".format(windowSize))
-    #cmlFlow_arr = calc_cumulative_flows(flow_arr, windowSize, fixDirection_arr)
-    cmlFlow_arr = calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr)
-    
-    np.save(dumpFilepath, cmlFlow_arr)
-    print("DONE: dump to {}".format(dumpFilepath))
+        print("START: calculate stabilized dense flows")
+        flow_arr = calc_stabilized_flows(fixDirection_arr)
 
-    if outputVideo:
-        print("START: output video to {}".format(videoFilepath))
-        output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath)
+        print("START: cumulating flows, windowSize = {}".format(windowSize))
+        cmlFlow_arr = calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr)
+
+        dumpFilepath = "./out/cml_{}.npy".format(page)
+        np.save(dumpFilepath, cmlFlow_arr)
+        print("DONE: dump to {}".format(dumpFilepath))
+
+        if outputVideo:
+            videoFilepath="./out/cml_{}.mp4".format(page)
+            print("START: output video to {}".format(videoFilepath))
+            output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath)
 
 if __name__=="__main__":
     start = time.time()
