@@ -103,7 +103,7 @@ def main():
     global PAGE
 
     configFilepath = "./config/config.ini"
-    TIME_MAX, _, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
+    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
 
     PAGE, windowSize, cmlFlowFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
     cmlFlow_arr = np.load(cmlFlowFilepath)
