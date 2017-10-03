@@ -64,11 +64,11 @@ def output(df, fixDirection_arr, outputFilepath):
 
             for time in range(1, TIME_MAX+1):
                 if tf<=time<tl:
-                    ax=int(my-cellWidth/2-fixDirection_arr[int(mz)][time][1]-240)
-                    ay=int(mx-cellWidth/2-fixDirection_arr[int(mz)][time][0]-240)
+                    ax=int(my-cellWidth/2+fixDirection_arr[int(mz)][time][0]-240)
+                    ay=int(mx-cellWidth/2+fixDirection_arr[int(mz)][time][1]-240)
                     az=int(mz - cellHeight/2)
-                    bx=int(my+cellWidth/2-fixDirection_arr[int(mz)][time][1]-240)
-                    by=int(mx+cellWidth/2-fixDirection_arr[int(mz)][time][0]-240)
+                    bx=int(my+cellWidth/2+fixDirection_arr[int(mz)][time][0]-240)
+                    by=int(mx+cellWidth/2+fixDirection_arr[int(mz)][time][1]-240)
                     bz=int(mz + cellHeight/2)
                 else:
                     ax,ay,az,bx,by,bz=-1,-1,-1,-1,-1,-1
