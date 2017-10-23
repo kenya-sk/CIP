@@ -12,8 +12,19 @@ Enter absolute path for data directory in `config.txt`
 e.g)/hoge/pre_image
 
 ### exec
-0. tr_image_movie.py
+1. tr_image_movie.py
     * converts a series of `.tif`s into `.mp4` in a designated order.
+2. stabilize.py
+    * correcting image using a  sparse optical flow
+3. cumulative_flow.py
+    * cumulative dense optical flow 
+4. dot_product.py
+    * caluculate dot product of the cululative flow
+5. output.py
+    * output answer file(.csv). using DBSCAN clustering 
+
+###procedure
+
 
 ## development policy
 * shared repository model
