@@ -3,6 +3,7 @@ import ciputil
 import matplotlib.pyplot as plt
 import pandas as pd
 import cv2
+import time
 
 from sklearn.cluster import DBSCAN
 
@@ -11,7 +12,7 @@ PAGE_MAX=None
 
 def get_df(dotThreshold):
     print("START: load dot")
-    
+
     dct_lst=[]
     for page in range(1,PAGE_MAX+1):
         dctPage_lst=[]
@@ -28,20 +29,20 @@ def get_df(dotThreshold):
                 dct["page"]=page
                 dctPage_lst.append(dct)
         if len(dctPage_lst) > 10000:
-            dctPage_lst = np.random.choice(dctPage_lst, 10000)
+            dctPage_lst = list(np.random.choice(dctPage_lst, 10000))
         dct_lst.extend(dctPage_lst)
     df=pd.DataFrame(dct_lst)
     return df
 
 def classify(df):
     print("START: classification")
-    
+
     norm_df=pd.DataFrame(index=df.index)
     norm_df["time"]=df["time"]/TIME_MAX/5
     norm_df["page"]=df["page"]/PAGE_MAX/10
     norm_df["x"]=df["x"]/960
     norm_df["y"]=df["y"]/960
-    
+
     dbscan = DBSCAN(eps=0.02,min_samples=100).fit(norm_df)
     df["label"]=dbscan.labels_
     unique, counts = np.unique(df["label"], return_counts=True)
@@ -52,7 +53,7 @@ def output(df, fixDirection_arr, outputFilepath):
     numDetect=np.max(df["label"])+1
     cellHeight=8
     cellWidth=50
-    
+
     with open(outputFilepath, "w") as f:
         divisionEvent_lst=[]
         for label in range(numDetect):
@@ -62,7 +63,7 @@ def output(df, fixDirection_arr, outputFilepath):
             if tl - tf > 10:
                 divisionEvent_lst.append(label)
         numDetect = len(divisionEvent_lst)
-        
+
         f.write("{}\n".format(TIME_MAX))
         f.write("{}\n".format(numDetect))
         f.write("\n")
@@ -88,22 +89,26 @@ def output(df, fixDirection_arr, outputFilepath):
                 f.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(ax,ay,az,bx,by,bz))
             f.write("\n")
 
-def main():
+def main(level):
     global TIME_MAX
     global PAGE_MAX
-    
+
     configFilepath = "./config/config.ini"
-    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
+    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath,level)
     #_, _, _ , dotThreshold, _, _ = ciputil.read_config_dot(configFilepath)
     dotThreshold=-10
     df=get_df(dotThreshold)
-    df=df[::10]
+    #df=df[::10]
     df=classify(df)
-    
+
     _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
+    fixDirectionFilepath = fixDirectionFilepath.replace("fixDir.npy", str(level) + "_fixDir.npy")
     fixDirection_arr = np.load(fixDirectionFilepath)
-    
-    output(df, fixDirection_arr, "output.csv")
+
+    output(df, fixDirection_arr, "output{}.csv".format(level))
 
 if __name__=="__main__":
+    start = time.time()
     main()
+    elapse = time.time() - start
+    print('\nelapse time: {}  sec'.format(elapse))

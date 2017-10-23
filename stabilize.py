@@ -156,15 +156,17 @@ def output_stabilized_video(fixDirection_arr, videoFilepath, configFilepath):
     print("DONE: output video to {}".format(videoFilepath))
 
 
-def main():
+def main(level):
     global TIME_MAX
     global PAGE_MAX
     global OUTPUT_VIDEO
 
     configFilepath = "./config/config.ini"
-    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
+    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath, level)
+    print("level = {}".format(level))
     angleThresh, dumpFilepath, videoFilepath = ciputil.read_config_stabilize(configFilepath)
     fixDirection_arr = calc_fix_direction(angleThresh)
+    dumpFilepath =  dumpFilepath.replace("fixDir.npy", str(level) + "_fixDir.npy")
     np.save(dumpFilepath, fixDirection_arr)
     print("DONE:  calcurate fix direction")
 

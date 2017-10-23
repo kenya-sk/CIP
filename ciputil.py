@@ -18,12 +18,12 @@ def set_config(configFilepath):
         sys.exit(1)
     return config
 
-def read_config(configFilepath):
+def read_config(configFilepath, level):
     global BASEDIR
     global LEVEL
 
     def get_level_configuration():
-        inputFilepath = BASEDIR + "/Pre_Data{0:02d}/input.csv".format(LEVEL)
+        inputFilepath = BASEDIR + "/Eva_Data{0:02d}/input.csv".format(LEVEL)
         try:
             with open(inputFilepath,"r") as f:
                 f.readline()
@@ -36,7 +36,8 @@ def read_config(configFilepath):
 
     config = set_config(configFilepath)
     BASEDIR = config["DEFAULT"]["BASEDIR"]
-    LEVEL = int(config["DEFAULT"]["LEVEL"])
+    #LEVEL = int(config["DEFAULT"]["LEVEL"])
+    LEVEL = level
     output_video = config.getboolean("DEFAULT", "OUTPUT_VIDEO")
     timemax, pagemax = get_level_configuration()
 
@@ -44,7 +45,8 @@ def read_config(configFilepath):
 
 
 def get_image(time, page):
-    filepath = BASEDIR + "/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(LEVEL, time, page)
+    #filepath = BASEDIR + "/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(LEVEL, time, page)
+    filepath = BASEDIR + "/Eva_Data{0:02d}/t{1:03d}/Eva_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(LEVEL, time, page)
     img = cv2.imread(filepath)
     assert img.shape == (480, 480, 3)
     return img

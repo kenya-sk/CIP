@@ -129,13 +129,13 @@ def calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr):
     cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
     initMask = np.prod(mask_arr[2 : min(2 + windowSize, TIME_MAX + 1)], axis = 0)
     cmlFlow_arr[1] = cumulate(flow_arr[2 : min(2+windowSize, TIME_MAX + 1)], initMask) #initialization with time=1
-    
+
     for time in range(2, TIME_MAX):
         print("calc time:{}".format(time))
         a = cmlFlow_arr[time - 1]-flow_arr[time] #subtraction
         assert a.shape == (960, 960, 2)
         b = np.zeros((960, 960, 2))
-        
+
         maskedX_arr = np.where(mask_arr[time] != 0)[0]
         maskedY_arr = np.where(mask_arr[time] != 0)[1]
         for maskIterator in range(len(maskedX_arr)):
@@ -174,16 +174,17 @@ def output_cumulative_video(cmlFlow_arr, fixDirection_arr, videoFilepath):
         video.write(flowImg)
     video.release()
 
-def main():
+def main(level):
     global TIME_MAX
     global PAGE_MAX
     global PAGE
 
     configFilepath = "./config/config.ini"
-    TIME_MAX, PAGE_MAX, outputVideo = ciputil.read_config(configFilepath)
+    TIME_MAX, PAGE_MAX, outputVideo = ciputil.read_config(configFilepath, level)
     _ ,windowSize, _, _ = ciputil.read_config_cumulative(configFilepath)
 
     _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
+    fixDirectionFilepath = fixDirectionFilepath.replace("fixDir.npy", str(level) + "_fixDir.npy")
     fixDirection_arr=np.load(fixDirectionFilepath)
 
     for page in range(1, PAGE_MAX+1):
@@ -196,7 +197,7 @@ def main():
         print("START: cumulating flows, windowSize = {}".format(windowSize))
         cmlFlow_arr = calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr)
 
-        dumpFilepath = "./out/cml_{}.npy".format(page)
+        dumpFilepath = "./out/{0}_cml_{1}.npy".format(level, page)
         np.save(dumpFilepath, cmlFlow_arr)
         print("DONE: dump to {}".format(dumpFilepath))
 

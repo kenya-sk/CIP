@@ -98,26 +98,25 @@ def output_dot_video(dotProduct_arr, dotProductThreshold, fixDirection_arr, vide
         video.write(dotImg)
     video.release()
 
-def main():
+def main(level):
     global TIME_MAX
     global PAGE
 
     configFilepath = "./config/config.ini"
-    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath)
-
+    TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath, level)
     PAGE, windowSize, cmlFlowFilepath, videoFilepath = ciputil.read_config_cumulative(configFilepath)
-    cmlFlow_arr = np.load(cmlFlowFilepath)
+    #cmlFlow_arr = np.load(cmlFlowFilepath)
     recalculate, windowSize, flowThreshold, dotThreshold, dumpFilepath, videoFilepath = ciputil.read_config_dot(configFilepath)
 
     for page in range(1, PAGE_MAX+1):
         PAGE = page
-        
+
         if recalculate:
             print("START: calculating dot product")
-            cmlFlowFilepath = "./out/cml_{}.npy".format(page)
+            cmlFlowFilepath = "./out/{0}_cml_{1}.npy".format(level, page)
             cmlFlow_arr = np.load(cmlFlowFilepath)
             dotProduct_arr = calc_dot_product(cmlFlow_arr, windowSize, flowThreshold)
-            dumpFilepath = "./out/dot_{}.npy".format(page)
+            dumpFilepath = "./out/{0}_dot_{1}.npy".format(level, page)
             np.save(dumpFilepath, dotProduct_arr)
             print("DONE: dump to {}".format(dumpFilepath))
         else:
@@ -126,8 +125,9 @@ def main():
 
         if OUTPUT_VIDEO:
             _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
+            fixDirectionFilepath = fixDirectionFilepath.replace("fixDir.npy", str(level) + "_fixDir.npy")
             fixDirection_arr = np.load(fixDirectionFilepath)
-            videoFilepath = "./out/dot_{}.mp4".format(page)
+            videoFilepath = "./out/{0}_dot_{1}.mp4".format(level, page)
             output_dot_video(dotProduct_arr, dotThreshold, fixDirection_arr,videoFilepath)
             print("DONE: output video to {}".format(videoFilepath))
 

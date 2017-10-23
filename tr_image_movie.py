@@ -13,7 +13,7 @@ def add_frame(img, frame):
     return img
 
 def main(videoFilepath, level=1,axis='time'):
-    
+
     #--------------------------------------------------------------------------------
     # load config.txt
     #--------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ def main(videoFilepath, level=1,axis='time'):
         print("Not Found: config.txt")
         print("\tPlease specify file directory in ./config.txt")
         sys.exit(1)
-    
+
     #--------------------------------------------------------------------------------
     # load input.csv to get timeMax and pageMax
     #--------------------------------------------------------------------------------
@@ -38,7 +38,8 @@ def main(videoFilepath, level=1,axis='time'):
     #--------------------------------------------------------------------------------
     # load Answer.txt to get time2zrange and time2frame
     #--------------------------------------------------------------------------------
-    answerFilepath=direc+"/Pre_Data{0:02d}/Pre_Data{0:02d}_Answer.txt".format(level)
+    #answerFilepath=direc+"/Pre_Data{0:02d}/Pre_Data{0:02d}_Answer.txt".format(level)
+    answerFilepath=direc+"/CIP/output.csv"
     with open(answerFilepath, 'r') as f:
         assert timeMax==int(f.readline().strip())
         numDivision=int(f.readline().strip())
@@ -66,7 +67,7 @@ def main(videoFilepath, level=1,axis='time'):
 
 
     #--------------------------------------------------------------------------------
-    # output .mp4 with designated order 
+    # output .mp4 with designated order
     #--------------------------------------------------------------------------------
     print("level: {}, axis: {}".format(level, axis))
     if axis == "time":
@@ -77,7 +78,7 @@ def main(videoFilepath, level=1,axis='time'):
         print("Bad Axis Error: {}".format(axis))
         sys.exit(1)
     print("DONE: {}".format(videoFilepath))
-        
+
 
 def time_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst):
     for page in range(1,pageMax+1):
