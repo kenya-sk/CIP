@@ -28,7 +28,7 @@ e.g)/hoge/pre_image
 ### procedure
 ```
 1. write configuration to config/config.ini
-2. execute stabilize.py. save numpy about fixDirection_arr  file in the set config.ini file.
+2. execute stabilize.py. save numpy file about fixDirection_arr  file in the set config.ini file.
 3. execute cumulative_flow.py. save numpy file about cmlFlow_arr  in the set config.ini file.
 4. execute dot_product.py. save numpy file about dotProduct_arr in the set config.ini file.
 5. execute output.py. export output.csv in current directory. 
