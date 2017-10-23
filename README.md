@@ -12,19 +12,27 @@ Enter absolute path for data directory in `config.txt`
 e.g)/hoge/pre_image
 
 ### exec
-1. tr_image_movie.py
+1. ciputil.py
+    * load configuration deta
+2. tr_image_movie.py
     * converts a series of `.tif`s into `.mp4` in a designated order.
-2. stabilize.py
+3. stabilize.py
     * correcting image using a  sparse optical flow
-3. cumulative_flow.py
+4. cumulative_flow.py
     * cumulative dense optical flow 
-4. dot_product.py
+5. dot_product.py
     * caluculate dot product of the cululative flow
-5. output.py
+6. output.py
     * output answer file(.csv). using DBSCAN clustering 
 
-###procedure
-
+### procedure
+```
+1. write configuration to config/config.ini
+2. execute stabilize.py. save numpy about fixDirection_arr  file in the set config.ini file.
+3. execute cumulative_flow.py. save numpy file about cmlFlow_arr  in the set config.ini file.
+4. execute dot_product.py. save numpy file about dotProduct_arr in the set config.ini file.
+5. execute output.py. export output.csv in current directory. 
+```
 
 ## development policy
 * shared repository model
