@@ -56,20 +56,19 @@ def output(df, fixDirection_arr, outputFilepath):
     cellWidth=50
 
     with open(outputFilepath, "w") as f:
-        divisionEvent_lst=[]
+        divisionLabel_lst=[]
         for label in range(numDetect):
             filter_df=df[df["label"]==label]
             tf=np.min(filter_df["time"]) #time first
             tl=np.max(filter_df["time"])
             if tl - tf > 10:
-                divisionEvent_lst.append(label)
-        numDetect = len(divisionEvent_lst)
+                divisionLabel_lst.append(label)
 
         f.write("{}\n".format(TIME_MAX))
-        f.write("{}\n".format(numDetect))
+        f.write("{}\n".format(len(divisionLabel_lst)))
         f.write("\n")
 
-        for label in divisionEvent_lst:
+        for label in divisionLabel_lst:
             filter_df=df[df["label"]==label]
             mx=np.mean(filter_df["x"])
             my=np.mean(filter_df["y"])
