@@ -111,7 +111,6 @@ def main(level):
 
 if __name__=="__main__":
     start = time.time()
-    for i in range(11):
-        main(i+1)
+    main(1)
     elapse = time.time() - start
     print('\nelapse time: {}  sec'.format(elapse))
