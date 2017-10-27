@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #coding: utf-8
 
 import sys
@@ -28,7 +27,8 @@ def main(videoFilepath, level=1,axis='time'):
     #--------------------------------------------------------------------------------
     # load input.csv to get timeMax and pageMax
     #--------------------------------------------------------------------------------
-    inputFilepath=direc+"/Pre_Data{0:02d}/input.csv".format(level)
+    #inputFilepath=direc+"/Pre_Data{0:02d}/input.csv".format(level)
+    inputFilepath = direc + "/evaluate/Eva_Data{0:02d}/input.csv".format(level)
     with open(inputFilepath, 'r') as f:
         f.readline()
         timeMax=int(f.readline().strip())
@@ -39,7 +39,7 @@ def main(videoFilepath, level=1,axis='time'):
     # load Answer.txt to get time2zrange and time2frame
     #--------------------------------------------------------------------------------
     #answerFilepath=direc+"/Pre_Data{0:02d}/Pre_Data{0:02d}_Answer.txt".format(level)
-    answerFilepath=direc+"/CIP/output.csv"
+    answerFilepath=direc+"/CIP/output1.csv"
     with open(answerFilepath, 'r') as f:
         assert timeMax==int(f.readline().strip())
         numDivision=int(f.readline().strip())
@@ -83,7 +83,8 @@ def main(videoFilepath, level=1,axis='time'):
 def time_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst):
     for page in range(1,pageMax+1):
         for time in range(1,timeMax+1):
-            filepath=direc+"/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
+            #filepath=direc+"/Pre_Data{0:02d}/t{1:03d}/Pre_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
+            filepath = direc + "/evaluate/Eva_Data{0:02d}/t{1:03d}/Eva_Data{0:02d}_t{1:03d}_page_{2:04d}.tif".format(level, time, page)
             img = cv2.imread(filepath)
             for time2zrange, time2frame in zip(time2zrange_lst, time2frame_lst):
                 if time2zrange[time][0]<=page and page<=time2zrange[time][1]:

@@ -10,13 +10,14 @@ from sklearn.cluster import DBSCAN
 TIME_MAX=None
 PAGE_MAX=None
 
-def get_df(dotThreshold):
+def get_df(dotThreshold, level):
     print("START: load dot")
 
     dct_lst=[]
     for page in range(1,PAGE_MAX+1):
         dctPage_lst=[]
-        dotFilepath="./out/dot_{}.npy".format(page)
+        dotFilepath="./out/{}_dot_{}.npy".format(level, page)
+        #dotFilepath="./out/dot_{}.npy".format(page)
         dotProduct_arr = np.load(dotFilepath)
         for time in range(1, TIME_MAX+1):
             divisionPoint_arr = np.array(np.where(dotProduct_arr[time] < dotThreshold)).T.reshape(-1,2)
@@ -28,8 +29,8 @@ def get_df(dotThreshold):
                 dct["time"]=time
                 dct["page"]=page
                 dctPage_lst.append(dct)
-        if len(dctPage_lst) > 10000:
-            dctPage_lst = list(np.random.choice(dctPage_lst, 10000))
+        if len(dctPage_lst) > TIME_MAX*250:
+            dctPage_lst = list(np.random.choice(dctPage_lst, TIME_MAX*250))
         dct_lst.extend(dctPage_lst)
     df=pd.DataFrame(dct_lst)
     return df
@@ -38,8 +39,8 @@ def classify(df):
     print("START: classification")
 
     norm_df=pd.DataFrame(index=df.index)
-    norm_df["time"]=df["time"]/TIME_MAX/5
-    norm_df["page"]=df["page"]/PAGE_MAX/10
+    norm_df["time"]=df["time"]/400
+    norm_df["page"]=df["page"]/260
     norm_df["x"]=df["x"]/960
     norm_df["y"]=df["y"]/960
 
@@ -97,18 +98,20 @@ def main(level):
     TIME_MAX, PAGE_MAX, OUTPUT_VIDEO = ciputil.read_config(configFilepath,level)
     #_, _, _ , dotThreshold, _, _ = ciputil.read_config_dot(configFilepath)
     dotThreshold=-10
-    df=get_df(dotThreshold)
-    #df=df[::10]
+    df=get_df(dotThreshold, level)
+    df=df[::10]
     df=classify(df)
 
     _, fixDirectionFilepath, _ = ciputil.read_config_stabilize(configFilepath)
     fixDirectionFilepath = fixDirectionFilepath.replace("fixDir.npy", str(level) + "_fixDir.npy")
+    print(fixDirectionFilepath)
     fixDirection_arr = np.load(fixDirectionFilepath)
 
-    output(df, fixDirection_arr, "output{}.csv".format(level))
+    output(df, fixDirection_arr, "./out2/output{}.csv".format(level))
 
 if __name__=="__main__":
     start = time.time()
-    main()
+    for i in range(11):
+        main(i+1)
     elapse = time.time() - start
     print('\nelapse time: {}  sec'.format(elapse))
