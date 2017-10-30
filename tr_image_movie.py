@@ -1,5 +1,9 @@
-#! /usr/bin/env python
-#coding: utf-8
+#coding: utf-8''
+
+"""
+convert a series of 'image (.tif)' into 'movie (.mp4)' in time/page order
+if you need help of this file. execute "python tr_image_movie.py -h"
+"""
 
 import sys
 import numpy as np
@@ -13,7 +17,7 @@ def add_frame(img, frame):
     return img
 
 def main(videoFilepath, level=1,axis='time'):
-    
+
     #--------------------------------------------------------------------------------
     # load config.txt
     #--------------------------------------------------------------------------------
@@ -24,7 +28,7 @@ def main(videoFilepath, level=1,axis='time'):
         print("Not Found: config.txt")
         print("\tPlease specify file directory in ./config.txt")
         sys.exit(1)
-    
+
     #--------------------------------------------------------------------------------
     # load input.csv to get timeMax and pageMax
     #--------------------------------------------------------------------------------
@@ -66,7 +70,7 @@ def main(videoFilepath, level=1,axis='time'):
 
 
     #--------------------------------------------------------------------------------
-    # output .mp4 with designated order 
+    # output .mp4 with designated order
     #--------------------------------------------------------------------------------
     print("level: {}, axis: {}".format(level, axis))
     if axis == "time":
@@ -77,7 +81,7 @@ def main(videoFilepath, level=1,axis='time'):
         print("Bad Axis Error: {}".format(axis))
         sys.exit(1)
     print("DONE: {}".format(videoFilepath))
-        
+
 
 def time_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst):
     for page in range(1,pageMax+1):

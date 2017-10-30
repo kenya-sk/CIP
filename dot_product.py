@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # coding: utf-8
 
 """
@@ -111,7 +110,7 @@ def main():
 
     for page in range(1, PAGE_MAX+1):
         PAGE = page
-        
+
         if recalculate:
             print("START: calculating dot product")
             cmlFlowFilepath = "./out/cml_{}.npy".format(page)

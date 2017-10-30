@@ -1,6 +1,15 @@
 #! /usr/bin/env python
 # coding: utf-8
 
+"""
+stabilizing image using a sparse optical flow.
+
+Please configure in [STABILIZE] section of config/config.ini file.
+    ANGLE_THRESH: variance angle threshold
+    DUMP_FILEPATH: output numpy file (fixDirection_arr) path
+    VIDEO_FILEPATH: output stabilized video path
+"""
+
 import sys
 import time
 import numpy as np
