@@ -33,8 +33,6 @@ cp output.csv ${BASEDIR}/Pre_DATA??/Pre_Data??_Answer.csv
 ./tr_image_movie.py ${VIDEO_FILEPATH} ${LEVEL} time
 ```
 
----
-
 ## development policy
 * shared repository model
   * <https://help.github.com/articles/about-collaborative-development-models/>
