@@ -1,8 +1,8 @@
 #coding: utf-8''
 
 """
-convert a series of 'images (.tif)' into 'movie (.mp4)' in time/page order
-if you need help of this file, execute "python tr_image_movie.py -h"
+convert a series of 'images (.tif)' into 'movie (.mp4)' in time/depth order.
+If you need help for this file, execute "python tr_image_movie.py -h".
 """
 
 import sys
@@ -38,7 +38,6 @@ def main(videoFilepath, level=1,axis='time'):
         timeMax=int(f.readline().strip())
         pageMax=int(f.readline().strip())
 
-
     #--------------------------------------------------------------------------------
     # load Answer.txt to get time2zrange and time2frame
     #--------------------------------------------------------------------------------
@@ -60,7 +59,6 @@ def main(videoFilepath, level=1,axis='time'):
             time2zrange_lst.append(time2zrange)
             time2frame_lst.append(time2frame)
 
-
     #--------------------------------------------------------------------------------
     # video output configuration
     #--------------------------------------------------------------------------------
@@ -68,9 +66,8 @@ def main(videoFilepath, level=1,axis='time'):
     video = cv2.VideoWriter(videoFilepath,fourcc,10.0,(480,480))
     waitImg = np.zeros((480,480,3),np.uint8)#image for waiting
 
-
     #--------------------------------------------------------------------------------
-    # output .mp4 with designated order
+    # output .mp4 in designated order
     #--------------------------------------------------------------------------------
     print("level: {}, axis: {}".format(level, axis))
     if axis == "time":

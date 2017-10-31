@@ -1,7 +1,7 @@
 #coding: utf-8
 
 """
-output answer file(.csv). using DBSCAN clustering. 
+output answer file(.csv). using DBSCAN clustering algorithm.
 """
 
 import numpy as np

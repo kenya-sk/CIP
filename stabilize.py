@@ -2,13 +2,13 @@
 # coding: utf-8
 
 """
-stabilize image using sparse optical flow.
-dump numpy files of 3d(x, y, z) image movement direction.
+stabilize images using sparse optical flow.
+dump numpy files of 3D(x, y, z) image movement direction.
 
-configure in [STABILIZE] section of config/config.ini file.
-    ANGLE_THRESH: If the variance of the flows in a frame is under ANGLE_THRESH, features in the frame are thought to be undetected.
-    DUMP_FILEPATH: path to which dump numpy files (fixDirection_arr)
-    VIDEO_FILEPATH: path to which output stabilized video
+configure [STABILIZE] section in "config/config.ini".
+    ANGLE_THRESH   : If the variance of the flows in a frame is under ANGLE_THRESH, features in the frame are thought to be undetected.
+    DUMP_FILEPATH  : filepath to dump numpy files (fixDirection_arr) to this path.
+    VIDEO_FILEPATH : filepath to output stabilized video to this path.
 """
 
 import sys
@@ -30,7 +30,7 @@ class FeatureError(Exception):
 
 def calc_fix_direction(angleThresh):
     """
-    calculate fix direction for at each time point.
+    calculate fix direction for each time point.
     fixDirection_arr[page][time] = fixDirectionX, fixDirectionY, fixDirectionZ
     (page: 1 ~ PAGE_MAX, time: 1 ~ TIME_MAX)
     """
@@ -50,7 +50,7 @@ def calc_fix_direction(angleThresh):
 
     def get_binarization(gray):
         """
-        The threshold is determined by the Otus algorithm
+        Threshold is determined by the Otsu algorithm
         """
         _, binaryImg = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         return binaryImg
@@ -132,7 +132,7 @@ def calc_fix_direction(angleThresh):
 
 def output_stabilized_video(fixDirection_arr, videoFilepath, configFilepath):
     """
-    output stabilized video according to fixDirection_arr
+    output stabilized video using fixDirection_arr
     """
 
     config = ConfigParser()

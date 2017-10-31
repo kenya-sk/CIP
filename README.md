@@ -1,43 +1,43 @@
 # CIP
 
 ## workflow
-### install openCV
+### installation of openCV
 ```
 pyenv install anaconda3-4.2.0  #should not be python3.6
 pyenv local anaconda3-4.2.0
 conda install -c https://conda.anaconda.org/menpo opencv3
 ```
-### configure
-Enter absolute path for data directory in `config.ini`
+
+### configuration
+Enter the absolute path for the data directory in `config/config.ini`
 e.g)/hoge/pre_image
 
-### exec
+### execution
 1. ciputil.py
-    * load configuration deta
+    * loads configuration data
 2. tr_image_movie.py
-    * converts a series of `.tif`s into `.mp4` in a designated order(time - continuous or depth - continuous).
+    * converts a series of `.tif`s into `.mp4` in designated order (time-continuous or depth-continuous)
 3. stabilize.py
-    * calculates movement of images to stabilize them by sparse optical flow.
+    * calculates movement of images to stabilize them by sparse optical flow
 4. cumulative_flow.py
-    * cumulative dense optical flow
+    * cumulates dense optical flow
 5. dot_product.py
-    * caluculate dot product of the cumulative flow
+    * caluculates dot product of the cumulative flow
 6. output.py
-    * output answer file(.csv). using DBSCAN clustering
+    * outputs answer file(.csv) using DBSCAN clustering algorithm
 
 ### procedure
 ```
-1. Please set the name of the input image as follows. Pre_Data{level (2 digits)}_t{time (3 digits)}_page_{page (4 digits)}.tif
-2. write the directory name of the input images in config.ini
-3. execute stabilize.py
-4. execute cumulative_flow.py
-5. execute dot_product.py
-6. execute output.py
+1. Set the names of the input images as follows. Pre_Data{level (2 digits)}_t{time (3 digits)}_page_{page (4 digits)}.tif
+2. Write the directory name of the input images in config/config.ini
+3. Execute stabilize.py
+4. Execute cumulative_flow.py
+5. Execute dot_product.py
+6. Execute output.py
 ```
 
-### check the answer
-if you need to check the answer, execute tr_image_movie.py
-
+### check of the answer
+If you need to check the answer, execute tr_image_movie.py
 
 ## development policy
 * shared repository model
