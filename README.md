@@ -37,7 +37,7 @@ e.g)/hoge/pre_image
     * detect division event to use DBSCAN clustering algorithm, and outputs answer file(.csv)
 
 ### helper
-tr_image_movie.py can convert series of tifs into mp4. When given the output .csv of output.py, the detected cell division event will be surrounded by a red frame. put output.csv in directory of image data.
+tr_image_movie.py can convert series of tifs into mp4. When given the output .csv of detect.py, the detected cell division event will be surrounded by a red frame. put output.csv in directory of image data.
 ./tr_image_movie.py arg1(filepath to output video) arg2(input image level) arg3(time or page)
 
 ## development policy
