@@ -27,8 +27,9 @@ conda install -c https://conda.anaconda.org/menpo opencv3
     * detect division events using DBSCAN clustering algorithm, and outputs answer file(.csv)
 
 ### Helper
-* `tr_image_movie.py` converts series of tifs into mp4. When given the `output.csv` of `detect.py`, it will output a movie with a red frame surrounding the detected cell division events. put `output.csv` in the directory of image data.
+* `tr_image_movie.py` converts series of `tif`s into a `mp4`. When given the answer file(.csv), it will output a movie with red frames surrounding the detected cell division events.
 ```
+(cp output.csv ${BASEDIR}/Pre_DATA??/Pre_Data??_Answer.csv)
 ./tr_image_movie.py arg1(filepath to output video) arg2(input image level) arg3(time or page)
 ```
 
