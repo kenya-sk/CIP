@@ -2,10 +2,11 @@
 # coding: utf-8
 
 """
-stabilizing image using a sparse optical flow.
+stabilize image using sparse optical flow.
+dump numpy file that stores 3d(x, y, z) correction direction.
 
 Please configure in [STABILIZE] section of config/config.ini file.
-    ANGLE_THRESH: variance angle threshold
+    ANGLE_THRESH: If an one frame has flow angle varience under ANGLE_THRESH, it is not detect feature in this frame. 
     DUMP_FILEPATH: output numpy file (fixDirection_arr) path
     VIDEO_FILEPATH: output stabilized video path
 """

@@ -2,6 +2,7 @@
 
 """
 Calc cumulative flow (cmlFlow_arr)　for a certain page.
+dump numpy file that cumulate dense flow.
 
 Please configure in [CUMULATIVE] section of config/config.ini file.
     PAGE :                page to be calculate cumulative flow.

@@ -17,9 +17,9 @@ e.g)/hoge/pre_image
 2. tr_image_movie.py
     * converts a series of `.tif`s into `.mp4` in a designated order.
 3. stabilize.py
-    * correcting image using a  sparse optical flow
+    * use sparse optical flow
 4. cumulative_flow.py
-    * cumulative dense optical flow
+    * cumulates dense optical flow
 5. dot_product.py
     * caluculate dot product of the cululative flow
 6. output.py
@@ -28,11 +28,11 @@ e.g)/hoge/pre_image
 ### procedure
 ```
 1. Please set the name of the input image as follows. Pre_Data{level (2 digits)}_t{time (3 digits)}_page_{page (4 digits)}.tif
-2. write the directory name of the input image in config.ini.
-3. python stabilize.py.
-3. python cumulative_flow.py.
-4. python dot_product.py.
-5. python output.py.
+2. write the directory name of the input image in config.ini
+3. python stabilize.py
+4. python cumulative_flow.py
+5. python dot_product.py
+6. python output.py
 ```
 
 ### check the answer

@@ -2,6 +2,7 @@
 
 """
 Calc dot product for a certain page.
+dump numpy file that dot cumulative flow.
 
 Please configure in [DOT] section of config file.
     PAGE :           page to be calculate cumulative flow.
