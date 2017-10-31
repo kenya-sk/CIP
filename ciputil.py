@@ -4,7 +4,7 @@
 """
 load configuration data from config/config.ini.
 get original/stabilized image.
-calculate/draw draw density flow.
+calculate/draw density flow.
 """
 
 import sys

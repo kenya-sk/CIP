@@ -1,8 +1,8 @@
 #coding: utf-8''
 
 """
-convert a series of 'image (.tif)' into 'movie (.mp4)' in time/page order
-if you need help of this file. execute "python tr_image_movie.py -h"
+convert a series of 'images (.tif)' into 'movie (.mp4)' in time/page order
+if you need help of this file, execute "python tr_image_movie.py -h"
 """
 
 import sys

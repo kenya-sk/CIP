@@ -3,12 +3,12 @@
 
 """
 stabilize image using sparse optical flow.
-dump numpy file that stores 3d(x, y, z) correction direction.
+dump numpy files of 3d(x, y, z) image movement direction.
 
-Please configure in [STABILIZE] section of config/config.ini file.
-    ANGLE_THRESH: If an one frame has flow angle varience under ANGLE_THRESH, it is not detect feature in this frame. 
-    DUMP_FILEPATH: output numpy file (fixDirection_arr) path
-    VIDEO_FILEPATH: output stabilized video path
+configure in [STABILIZE] section of config/config.ini file.
+    ANGLE_THRESH: If the variance of the flows in a frame is under ANGLE_THRESH, features in the frame are thought to be undetected.
+    DUMP_FILEPATH: path to which dump numpy files (fixDirection_arr)
+    VIDEO_FILEPATH: path to which output stabilized video
 """
 
 import sys

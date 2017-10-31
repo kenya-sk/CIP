@@ -1,10 +1,10 @@
 # coding: utf-8
 
 """
-Calc dot product for a certain page.
-dump numpy file that dot cumulative flow.
+caluculate dot product for a certain page.
+dump numpy file of dot product of cumulative flows.
 
-Please configure in [DOT] section of config file.
+configure in [DOT] section of config file.
     PAGE :           page to be calculate cumulative flow.
     FLOW_THRESHOLD:  If a pixel has flow with norm under FLOW_THRESHOLD, the flow is rounded to (0,0).
     DOT_THRESHOLD :  If a pixel has dot product value under DOT_THRESHOLD, it is drawn with a red circle in video.

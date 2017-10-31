@@ -1,10 +1,10 @@
 # coding: utf-8
 
 """
-Calc cumulative flow (cmlFlow_arr)　for a certain page.
-dump numpy file that cumulate dense flow.
+calculate cumulative flow (cmlFlow_arr)　for a certain page.
+dump numpy files of cumulative dense flow.
 
-Please configure in [CUMULATIVE] section of config/config.ini file.
+configure in [CUMULATIVE] section of config/config.ini file.
     PAGE :                page to be calculate cumulative flow.
     WINDOW_SIZE :    The degree of cumulation. When windowSize = 1, cumulative flow equals to usual dence flow.
     DUMP_FILEPATH :  filepath to dump cmlFlow_arr
