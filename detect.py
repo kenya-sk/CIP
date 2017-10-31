@@ -1,3 +1,10 @@
+#! /usr/bin/env python
+#coding: utf-8
+
+"""
+output answer file(.csv). using DBSCAN clustering algorithm.
+"""
+
 import numpy as np
 import ciputil
 import matplotlib.pyplot as plt
@@ -106,7 +113,7 @@ def main(level):
     print(fixDirectionFilepath)
     fixDirection_arr = np.load(fixDirectionFilepath)
 
-    output(df, fixDirection_arr, "./out2/output{}.csv".format(level))
+    output(df, fixDirection_arr, "./out/output{}.csv".format(level))
 
 if __name__=="__main__":
     start = time.time()

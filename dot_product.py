@@ -1,17 +1,18 @@
-#! /usr/bin/env python
+#! /usr/biin/env python
 # coding: utf-8
 
 """
-Calc dot product for a certain page.
+caluculate dot product for a certain page.
+dump numpy file of dot product of cumulative flows.
 
-Please configure in [DOT] section of config file.
-    PAGE :           page to be calculate cumulative flow.
-    FLOW_THRESHOLD:  If a pixel has flow with norm under FLOW_THRESHOLD, the flow is rounded to (0,0).
-    DOT_THRESHOLD :  If a pixel has dot product value under DOT_THRESHOLD, it is drawn with a red circle in video.
-    WINDOW_SIZE :    The size of neibor pixel window. Set ODD NUMBER and GREATOR THAN 3.
-    CALC_DOT_FLAG:   Whether calculate the dot product array or not.
-    DUMP_FILEPATH :  filepath to dump dotProduct_arr
-    VIDEO_FILEPATH : filepath to output video. only used when  DEFAULT.OUTPUT_VIDEO = yes
+configure [DOT] section in config file.
+    PAGE           : page for which calculate cumulative flow.
+    FLOW_THRESHOLD : If a pixel has flow with norm under FLOW_THRESHOLD, the flow is rounded to (0,0).
+    DOT_THRESHOLD  : If a pixel has dot product value under DOT_THRESHOLD, it is drawn with a red circle in video. only used when DEFAULT.OUTPUT_VIDEO = yes.
+    WINDOW_SIZE    : The size of neibor pixel window. Set ODD NUMBER and GREATOR THAN 3.
+    RECALCULATE    : Whether recalculate the dot product array or not.
+    DUMP_FILEPATH  : filepath to dump dotProduct_arr
+    VIDEO_FILEPATH : filepath to output video. only used when DEFAULT.OUTPUT_VIDEO = yes
 """
 
 import numpy as np

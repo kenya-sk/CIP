@@ -1,5 +1,10 @@
-#! /usr/bin/env python
 # coding: utf-8
+
+"""
+load configuration data from config/config.ini.
+get original/stabilized image.
+calculate/draw density flow.
+"""
 
 import sys
 import cv2
