@@ -30,7 +30,7 @@ conda install -c https://conda.anaconda.org/menpo opencv3
 * `tr_image_movie.py` converts series of `tif`s into a `mp4`. When given the answer file(.csv), it will output a movie with red frames surrounding the detected cell division events.
 ```
 (cp output.csv ${BASEDIR}/Pre_DATA??/Pre_Data??_Answer.csv)
-./tr_image_movie.py arg1(filepath to output video) arg2(input image level) arg3(time or page)
+./tr_image_movie.py ${VIDEO_FILEPATH} ${LEVEL} time
 ```
 
 ---
