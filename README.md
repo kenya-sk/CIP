@@ -1,4 +1,5 @@
 # CIP
+CIP (**G**reatest **R**epository **E**ver) detects cell division with accuracy far better than random.
 
 ## Workflow
 ### Installation of openCV
