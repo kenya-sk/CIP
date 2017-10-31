@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 #coding: utf-8
 
+"""
+convert a series of 'images (.tif)' into 'movie (.mp4)' in time/depth order.
+If you need help for this file, execute "python tr_image_movie.py -h".
+"""
+
 import sys
 import numpy as np
 import cv2
@@ -13,7 +18,7 @@ def add_frame(img, frame):
     return img
 
 def main(videoFilepath, level=1,axis='time'):
-    
+
     #--------------------------------------------------------------------------------
     # load config.txt
     #--------------------------------------------------------------------------------
@@ -24,7 +29,7 @@ def main(videoFilepath, level=1,axis='time'):
         print("Not Found: config.txt")
         print("\tPlease specify file directory in ./config.txt")
         sys.exit(1)
-    
+
     #--------------------------------------------------------------------------------
     # load input.csv to get timeMax and pageMax
     #--------------------------------------------------------------------------------
@@ -33,7 +38,6 @@ def main(videoFilepath, level=1,axis='time'):
         f.readline()
         timeMax=int(f.readline().strip())
         pageMax=int(f.readline().strip())
-
 
     #--------------------------------------------------------------------------------
     # load Answer.txt to get time2zrange and time2frame
@@ -56,7 +60,6 @@ def main(videoFilepath, level=1,axis='time'):
             time2zrange_lst.append(time2zrange)
             time2frame_lst.append(time2frame)
 
-
     #--------------------------------------------------------------------------------
     # video output configuration
     #--------------------------------------------------------------------------------
@@ -64,9 +67,8 @@ def main(videoFilepath, level=1,axis='time'):
     video = cv2.VideoWriter(videoFilepath,fourcc,10.0,(480,480))
     waitImg = np.zeros((480,480,3),np.uint8)#image for waiting
 
-
     #--------------------------------------------------------------------------------
-    # output .mp4 with designated order 
+    # output .mp4 in designated order
     #--------------------------------------------------------------------------------
     print("level: {}, axis: {}".format(level, axis))
     if axis == "time":
@@ -77,7 +79,7 @@ def main(videoFilepath, level=1,axis='time'):
         print("Bad Axis Error: {}".format(axis))
         sys.exit(1)
     print("DONE: {}".format(videoFilepath))
-        
+
 
 def time_scale(timeMax,pageMax,level,direc,video,waitImg, time2zrange_lst, time2frame_lst):
     for page in range(1,pageMax+1):

@@ -2,13 +2,14 @@
 # coding: utf-8
 
 """
-Calc cumulative flow (cmlFlow_arr)　for a certain page.
+calculate cumulative flow (cmlFlow_arr)　for a certain page.
+dump numpy files of cumulative dense flow.
 
-Please configure in [CUMULATIVE] section of config file.
-    PAGE :                page to be calculate cumulative flow.
-    WINDOW_SIZE :    The degree of cumulation. When windowSize = 1, cumulative flow equals to usual dence flow.
-    DUMP_FILEPATH :  filepath to dump cmlFlow_arr
-    VIDEO_FILEPATH : filepath to output video. only used when  DEFAULT.OUTPUT_VIDEO = yes
+configure [CUMULATIVE] section in "config/config.ini".
+    PAGE           : page for which calculate cumulative flow.
+    WINDOW_SIZE    : The degree of cumulation. When windowSize = 1, cumulative flow equals to usual dense flow.
+    DUMP_FILEPATH  : filepath to dump cmlFlow_arr.
+    VIDEO_FILEPATH : filepath to output video. only used when DEFAULT.OUTPUT_VIDEO = yes.
 """
 
 import numpy as np
@@ -129,21 +130,21 @@ def calc_cumulative_flows_fast(flow_arr, windowSize, fixDirection_arr):
     cmlFlow_arr = np.zeros((TIME_MAX + 1, 960, 960, 2))
     initMask = np.prod(mask_arr[2 : min(2 + windowSize, TIME_MAX + 1)], axis = 0)
     cmlFlow_arr[1] = cumulate(flow_arr[2 : min(2+windowSize, TIME_MAX + 1)], initMask) #initialization with time=1
-    
+
     for time in range(2, TIME_MAX):
         print("calc time:{}".format(time))
         a = cmlFlow_arr[time - 1]-flow_arr[time] #subtraction
         assert a.shape == (960, 960, 2)
+        """
+        b: cml flow of (time + 1 ~ time+windowSize)
+        """
         b = np.zeros((960, 960, 2))
-        
+
         maskedX_arr = np.where(mask_arr[time] != 0)[0]
         maskedY_arr = np.where(mask_arr[time] != 0)[1]
         for maskIterator in range(len(maskedX_arr)):
             x = maskedX_arr[maskIterator]
             y = maskedY_arr[maskIterator]
-            """
-            b: cml flow of (time + 1 ~ time+windowSize)
-            """
             i = x + int(flow_arr[time][x][y][0])
             j = y + int(flow_arr[time][x][y][1])
             if 0 <= i < 960 and 0 <= j < 960:
