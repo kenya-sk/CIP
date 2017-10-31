@@ -19,20 +19,25 @@ e.g)/hoge/pre_image
 3. stabilize.py
     * correcting image using a  sparse optical flow
 4. cumulative_flow.py
-    * cumulative dense optical flow 
+    * cumulative dense optical flow
 5. dot_product.py
     * caluculate dot product of the cululative flow
 6. output.py
-    * output answer file(.csv). using DBSCAN clustering 
+    * output answer file(.csv). using DBSCAN clustering
 
 ### procedure
 ```
-1. write configuration to config/config.ini
-2. execute stabilize.py. save numpy file about fixDirection_arr  file in the set config.ini file.
-3. execute cumulative_flow.py. save numpy file about cmlFlow_arr  in the set config.ini file.
-4. execute dot_product.py. save numpy file about dotProduct_arr in the set config.ini file.
-5. execute output.py. export output.csv in current directory. 
+1. Please set the name of the input image as follows. Pre_Data{level (2 digits)}_t{time (3 digits)}_page_{page (4 digits)}.tif
+2. write the directory name of the input image in config.ini.
+3. python stabilize.py.
+3. python cumulative_flow.py.
+4. python dot_product.py.
+5. python output.py.
 ```
+
+### check the answer
+if you need to check the answer, please execute tr_image_movie.py
+
 
 ## development policy
 * shared repository model
@@ -47,4 +52,3 @@ e.g)/hoge/pre_image
 2017/09/29: submission<br>
 2017/10/20: submission(paper)<br>
 2017/12/07: party<br>
-
