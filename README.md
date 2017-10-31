@@ -12,7 +12,17 @@ conda install -c https://conda.anaconda.org/menpo opencv3
 Enter the absolute path for the data directory in `config/config.ini`
 e.g)/hoge/pre_image
 
-### execution
+### procedure
+```
+1. Set the names of the input images as follows. Pre_Data{level (2 digits)}_t{time (3 digits)}_page_{page (4 digits)}.tif
+2. Write the directory name of the input images in config/config.ini
+3. ./stabilize.py
+4. ./cumulative_flow.py
+5. ./dot_product.py
+6. ./detect.py
+```
+
+### detail
 1. ciputil.py
     * loads configuration data
 2. tr_image_movie.py
@@ -23,21 +33,12 @@ e.g)/hoge/pre_image
     * cumulates dense optical flow
 5. dot_product.py
     * caluculates dot product of the cumulative flow
-6. output.py
-    * outputs answer file(.csv) using DBSCAN clustering algorithm
+6. detect.py
+    * detect division event to use DBSCAN clustering algorithm, and outputs answer file(.csv)
 
-### procedure
-```
-1. Set the names of the input images as follows. Pre_Data{level (2 digits)}_t{time (3 digits)}_page_{page (4 digits)}.tif
-2. Write the directory name of the input images in config/config.ini
-3. Execute stabilize.py
-4. Execute cumulative_flow.py
-5. Execute dot_product.py
-6. Execute output.py
-```
-
-### check of the answer
-If you need to check the answer, execute tr_image_movie.py
+### helper
+tr_image_movie.py can convert series of tifs into mp4. When given the output .csv of output.py, the detected cell division event will be surrounded by a red frame. put output.csv in directory of image data.
+./tr_image_movie.py arg1(filepath to output video) arg2(input image level) arg3(time or page)
 
 ## development policy
 * shared repository model

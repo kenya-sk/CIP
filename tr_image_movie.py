@@ -1,4 +1,5 @@
-#coding: utf-8''
+#! /usr/bin/env python
+#coding: utf-8
 
 """
 convert a series of 'images (.tif)' into 'movie (.mp4)' in time/depth order.
